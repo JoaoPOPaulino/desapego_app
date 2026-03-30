@@ -1,4 +1,5 @@
 import 'package:desapego/core/theme.dart';
+import 'package:desapego/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 
 class DesapegoApp extends StatelessWidget {
@@ -27,10 +28,10 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _screens = [
     const HomeScreen(),
-    const ExplorarScreen(),
+    /* const ExplorarScreen(),
     const CadastrarScreen(),
     const MeusAnunciosScreen(),
-    const PerfilScreen(),
+    const PerfilScreen(), */
   ];
 
   @override
