@@ -4,6 +4,7 @@ class ItemModel {
   final String descricao;
   final String categoria;
   final double? preco;
+  final String? nomeContato;
   final String contato;
   final String? imagemUrl;
   final bool destaque;
@@ -15,11 +16,12 @@ class ItemModel {
     required this.descricao,
     required this.categoria,
     this.preco,
+    this.nomeContato,         
     required this.contato,
     this.imagemUrl,
     this.destaque = false,
-    DateTime? criadoEm,
-  }) : criadoEm = criadoEm ?? DateTime.now();
+    required this.criadoEm,
+  });
 
   bool get isGratuito => preco == null || preco == 0;
 
@@ -30,9 +32,10 @@ class ItemModel {
       'descricao': descricao,
       'categoria': categoria,
       'preco': preco,
+      'nomeContato': nomeContato,
       'contato': contato,
       'imagemUrl': imagemUrl,
-      'destaque': destaque,
+      'destaque': destaque ? 1 : 0,
       'criadoEm': criadoEm.toIso8601String(),
     };
   }
@@ -43,10 +46,11 @@ class ItemModel {
       nome: map['nome'],
       descricao: map['descricao'],
       categoria: map['categoria'],
-      preco: (map['preco'] as num?)?.toDouble(),
+      preco: map['preco']?.toDouble(),
+      nomeContato: map['nomeContato'],
       contato: map['contato'],
       imagemUrl: map['imagemUrl'],
-      destaque: map['destaque'] ?? false,
+      destaque: map['destaque'] == 1,
       criadoEm: DateTime.parse(map['criadoEm']),
     );
   }
