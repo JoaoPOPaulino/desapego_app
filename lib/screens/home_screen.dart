@@ -1,4 +1,5 @@
 import 'package:desapego/screens/detalhe_screen.dart';
+import 'package:desapego/services/item_service.dart';
 import 'package:desapego/widgets/carousel_widget.dart';
 import 'package:desapego/widgets/item_card.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +10,8 @@ import '../models/item_model.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  static final List<ItemModel> _destaques = [
+  // Dados mockados locais (enquanto não há itens no Firestore)
+  static final List<ItemModel> _destaquesMock = [
     ItemModel(
       id: '1',
       nome: 'Notebook Dell i5',
@@ -18,6 +20,7 @@ class HomeScreen extends StatelessWidget {
       preco: 1200,
       nomeContato: 'João Silva',
       contato: '(63) 9 9999-0000',
+      imagemAsset: 'assets/images/notebook.png',
       destaque: true,
       criadoEm: DateTime.now(),
     ),
@@ -29,6 +32,7 @@ class HomeScreen extends StatelessWidget {
       preco: 180,
       nomeContato: 'Maria Souza',
       contato: '(63) 9 8888-0000',
+      imagemAsset: 'assets/images/mesa_escritorio.jpg',
       destaque: true,
       criadoEm: DateTime.now(),
     ),
@@ -40,40 +44,8 @@ class HomeScreen extends StatelessWidget {
       preco: null,
       nomeContato: 'Pedro Lima',
       contato: '(63) 9 7777-0000',
+      imagemAsset: 'assets/images/camisas.png',
       destaque: true,
-      criadoEm: DateTime.now(),
-    ),
-  ];
-
-  static final List<ItemModel> _recentes = [
-    ItemModel(
-      id: '4',
-      nome: 'Monitor 21"',
-      descricao: 'Samsung, Bom estado',
-      categoria: 'Eletrônico',
-      preco: 350,
-      nomeContato: 'João Silva',
-      contato: '(63) 9 9999-1111',
-      criadoEm: DateTime.now(),
-    ),
-    ItemModel(
-      id: '5',
-      nome: 'Mesa de escritório',
-      descricao: 'Madeira, 1.20m, ótimo estado',
-      categoria: 'Móveis',
-      preco: 180,
-      nomeContato: 'Ana Costa',
-      contato: '(63) 9 9999-2222',
-      criadoEm: DateTime.now(),
-    ),
-    ItemModel(
-      id: '6',
-      nome: 'Camisas masculinas',
-      descricao: '3 camisas tamanho M',
-      categoria: 'Roupas',
-      preco: null,
-      nomeContato: 'Lucas Rocha',
-      contato: '(63) 9 9999-3333',
       criadoEm: DateTime.now(),
     ),
   ];
@@ -98,7 +70,14 @@ class HomeScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
-                  _buildCarousel(context),
+                  CarouselWidget(
+                    itens: _destaquesMock,
+                    onItemTap: (item) => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => DetalheScreen(item: item)),
+                    ),
+                  ),
                   const SizedBox(height: 20),
                   _buildRecentesHeader(context),
                   const SizedBox(height: 10),
@@ -128,9 +107,9 @@ class HomeScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
+              const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Text(
                     'Desapego+',
                     style: TextStyle(
@@ -169,22 +148,13 @@ class HomeScreen extends StatelessWidget {
                 SizedBox(width: 8),
                 Text(
                   'Buscar itens...',
-                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                  style:
+                      TextStyle(color: AppTheme.textSecondary, fontSize: 14),
                 ),
               ],
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildCarousel(BuildContext context) {
-    return CarouselWidget(
-      itens: _destaques,
-      onItemTap: (item) => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => DetalheScreen(item: item)),
       ),
     );
   }
@@ -216,19 +186,70 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildRecentesList(BuildContext context) {
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: _recentes.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
-      itemBuilder: (context, index) {
-        final item = _recentes[index];
-        return ItemCard(
-          item: item,
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => DetalheScreen(item: item)),
+    return StreamBuilder<List<ItemModel>>(
+      stream: ItemService.listarTodos(),
+      builder: (context, snapshot) {
+        // Carregando
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.all(32),
+            child: Center(
+              child: CircularProgressIndicator(color: AppTheme.primary),
+            ),
+          );
+        }
+
+        // Erro
+        if (snapshot.hasError) {
+          return Padding(
+            padding: const EdgeInsets.all(32),
+            child: Center(
+              child: Text(
+                'Erro ao carregar itens.',
+                style: TextStyle(color: Colors.red[300]),
+              ),
+            ),
+          );
+        }
+
+        final itens = snapshot.data ?? [];
+
+        // Sem dados ainda — mostra mock
+        if (itens.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              children: _destaquesMock
+                  .map((item) => Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: ItemCard(
+                          item: item,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => DetalheScreen(item: item)),
+                          ),
+                        ),
+                      ))
+                  .toList(),
+            ),
+          );
+        }
+
+        // Dados do Firestore
+        return ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemCount: itens.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 10),
+          itemBuilder: (context, index) => ItemCard(
+            item: itens[index],
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => DetalheScreen(item: itens[index])),
+            ),
           ),
         );
       },

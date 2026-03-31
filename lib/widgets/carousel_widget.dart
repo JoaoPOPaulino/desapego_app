@@ -1,3 +1,4 @@
+import 'package:desapego/widgets/item_imagem.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import '../core/theme.dart';
@@ -34,9 +35,7 @@ class _CarouselWidgetState extends State<CarouselWidget> {
             autoPlayInterval: const Duration(seconds: 3),
             padEnds: true,
             onPageChanged: (index, reason) {
-              setState(() {
-                _indiceAtual = index;
-              });
+              setState(() => _indiceAtual = index);
             },
           ),
           items: widget.itens.map((item) {
@@ -48,78 +47,61 @@ class _CarouselWidgetState extends State<CarouselWidget> {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 padding: const EdgeInsets.all(16),
-                child: Stack(
+                child: Row(
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: const Text(
-                                  'Destaque',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                  ),
-                                ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Text(
+                              'Destaque',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
                               ),
-                              const SizedBox(height: 6),
-                              // Nome do item
-                              Text(
-                                item.nome,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              // Preço
-                              Text(
-                                item.isGratuito
-                                    ? 'Gratuito'
-                                    : 'R\$ ${item.preco!.toStringAsFixed(2)}',
-                                style: const TextStyle(
-                                  color: Color(0xFFD4D0FF),
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
-                        Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(12),
+                          const SizedBox(height: 6),
+                          Text(
+                            item.nome,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                          child: item.imagemUrl != null
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.network(
-                                    item.imagemUrl!,
-                                    fit: BoxFit.cover,
-                                  ),
-                                )
-                              : const Icon(
-                                  Icons.image_outlined,
-                                  color: Colors.white54,
-                                  size: 32,
-                                ),
-                        ),
-                      ],
+                          const SizedBox(height: 4),
+                          Text(
+                            item.isGratuito
+                                ? 'Gratuito'
+                                : 'R\$ ${item.preco!.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              color: Color(0xFFD4D0FF),
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Imagem do item no carousel
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: ItemImage(
+                        item: item,
+                        width: 80,
+                        height: 80,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ],
                 ),
@@ -127,7 +109,6 @@ class _CarouselWidgetState extends State<CarouselWidget> {
             );
           }).toList(),
         ),
-
         const SizedBox(height: 10),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -140,7 +121,8 @@ class _CarouselWidgetState extends State<CarouselWidget> {
               margin: const EdgeInsets.symmetric(horizontal: 3),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(ativo ? 4 : 50),
-                color: ativo ? AppTheme.primary : Colors.grey.withOpacity(0.4),
+                color:
+                    ativo ? AppTheme.primary : Colors.grey.withOpacity(0.4),
               ),
             );
           }),

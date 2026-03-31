@@ -1,10 +1,12 @@
 import 'dart:io';
-
 import 'package:desapego/core/theme.dart';
+import 'package:flutter/foundation.dart';
 import 'package:desapego/models/item_model.dart';
+import 'package:desapego/services/item_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart' show ImageSource, ImagePicker;
+import 'package:image_picker/image_picker.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 class CadastrarScreen extends StatefulWidget {
   const CadastrarScreen({super.key});
@@ -22,11 +24,16 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
   final _contatoController = TextEditingController();
   final _nomeContatoController = TextEditingController();
 
+  final _telefoneMask = MaskTextInputFormatter(
+    mask: '(##) # ####-####',
+    filter: {'#': RegExp(r'[0-9]')},
+  );
+
   String? _categoriaSelecionada;
-
   bool _isGratuito = false;
-
+  bool _salvando = false;
   File? _imagemSelecionada;
+  Uint8List? _imagemWebBytes; 
 
   final List<String> _categorias = [
     'Eletrônicos',
@@ -48,24 +55,28 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
   }
 
   Future<void> _selecionarImagem() async {
-    final picker = ImagePicker();
-    final image = await picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 800,
-      maxHeight: 800,
-      imageQuality: 85,
-    );
-
-    if (image != null) {
-      setState(() {
-        _imagemSelecionada = File(image.path);
-      });
+  final picker = ImagePicker();
+  final image = await picker.pickImage(
+    source: ImageSource.gallery,
+    maxWidth: 800,
+    maxHeight: 800,
+    imageQuality: 85,
+  );
+  if (image != null) {
+    if (kIsWeb) {
+      final bytes = await image.readAsBytes();
+      setState(() => _imagemWebBytes = bytes);
+    } else {
+      setState(() => _imagemSelecionada = File(image.path));
     }
   }
+}
 
-  void _publicar() {
-    if (!_formKey.currentState!.validate()) return;
+  void _publicar() async {
+  if (!_formKey.currentState!.validate()) return;
+  setState(() => _salvando = true);
 
+  try {
     final novoItem = ItemModel(
       nome: _nomeController.text.trim(),
       descricao: _descricaoController.text.trim(),
@@ -78,18 +89,33 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
       criadoEm: DateTime.now(),
     );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Anúncio publicado com sucesso!'),
-        backgroundColor: Color(0xFF1D9E75),
-        duration: Duration(seconds: 2),
-      ),
+    await ItemService.salvar(
+      novoItem,
+      imagem: kIsWeb ? null : _imagemSelecionada,
+      imagemBytes: kIsWeb ? _imagemWebBytes : null,
     );
 
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) Navigator.pop(context);
-    });
+    if (!mounted) return;
+    await ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(
+          content: Text('Anúncio publicado com sucesso!'),
+          backgroundColor: Color(0xFF1D9E75),
+          duration: Duration(seconds: 2),
+        ))
+        .closed;
+    if (mounted) Navigator.pop(context);
+  } catch (e) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Erro: ${e.toString()}'),
+        backgroundColor: Colors.red,
+      ),
+    );
+  } finally {
+    if (mounted) setState(() => _salvando = false);
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -110,6 +136,7 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
               padding: const EdgeInsets.all(16),
               child: Form(
                 key: _formKey,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -119,9 +146,15 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
                       label: 'Nome do item',
                       controller: _nomeController,
                       placeholder: 'Ex: Mesa de escritório',
-                      validator: (v) => v == null || v.trim().isEmpty
-                          ? 'Informe o nome do item'
-                          : null,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) {
+                          return 'Informe o nome do item';
+                        }
+                        if (v.trim().length < 3) {
+                          return 'Nome muito curto (mín. 3 caracteres)';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 14),
                     _buildCampo(
@@ -129,9 +162,15 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
                       controller: _descricaoController,
                       placeholder: 'Descreva o estado do item...',
                       maxLines: 3,
-                      validator: (v) => v == null || v.trim().isEmpty
-                          ? 'Informe a descrição'
-                          : null,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) {
+                          return 'Informe a descrição';
+                        }
+                        if (v.trim().length < 10) {
+                          return 'Descrição muito curta (mín. 10 caracteres)';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 14),
                     _buildDropdownCategoria(),
@@ -141,22 +180,24 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 200),
                       child: _isGratuito
-                          ? const SizedBox.shrink() // widget vazio — some
+                          ? const SizedBox.shrink()
                           : _buildCampo(
                               key: const ValueKey('campo_valor'),
                               label: 'Valor (R\$)',
                               controller: _valorController,
                               placeholder: '0,00',
-                              // TextInputType.number abre teclado numérico
                               teclado: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                    RegExp(r'[0-9,.]')),
+                              ],
                               validator: (v) {
                                 if (_isGratuito) return null;
                                 if (v == null || v.trim().isEmpty) {
                                   return 'Informe o valor';
                                 }
                                 final val = double.tryParse(
-                                  v.replaceAll(',', '.'),
-                                );
+                                    v.replaceAll(',', '.'));
                                 if (val == null || val <= 0) {
                                   return 'Valor inválido';
                                 }
@@ -179,6 +220,7 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
                       controller: _contatoController,
                       placeholder: '(63) 9 0000-0000',
                       teclado: TextInputType.phone,
+                      inputFormatters: [_telefoneMask],
                       validator: (v) => v == null || v.trim().isEmpty
                           ? 'Informe o contato'
                           : null,
@@ -196,7 +238,6 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
     );
   }
 
-  // ── TopBar ───────────────────────────────────────────
   Widget _buildTopBar(BuildContext context) {
     return Container(
       color: AppTheme.background,
@@ -208,7 +249,6 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
       ),
       child: Row(
         children: [
-          // Botão voltar circular
           GestureDetector(
             onTap: () => Navigator.pop(context),
             child: Container(
@@ -239,80 +279,79 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
     );
   }
 
-  // ── Área de seleção de foto ──────────────────────────
   Widget _buildAreaFoto() {
-    return GestureDetector(
-      onTap: _selecionarImagem,
-      child: Container(
-        width: double.infinity,
-        height: 120,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: _imagemSelecionada != null
-                ? AppTheme.primary
-                : const Color(0xFFB4B2A9),
-            width: 1.5,
-          ),
+  final temImagem = kIsWeb
+      ? _imagemWebBytes != null
+      : _imagemSelecionada != null;
+
+  return GestureDetector(
+    onTap: _selecionarImagem,
+    child: Container(
+      width: double.infinity,
+      height: 120,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: temImagem ? AppTheme.primary : const Color(0xFFB4B2A9),
+          width: 1.5,
         ),
-        child: _imagemSelecionada != null
-            ? Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.file(
-                      _imagemSelecionada!,
-                      width: double.infinity,
-                      height: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.edit,
-                        color: Colors.white,
-                        size: 14,
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.camera_alt_outlined,
-                    color: const Color(0xFFB4B2A9),
-                    size: 32,
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Adicionar foto',
-                    style: TextStyle(color: Color(0xFF888780), fontSize: 13),
-                  ),
-                  const SizedBox(height: 2),
-                  const Text(
-                    'Toque para selecionar',
-                    style: TextStyle(
-                      color: AppTheme.primary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
       ),
-    );
-  }
+      child: temImagem
+          ? Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: kIsWeb
+                      ? Image.memory(
+                          _imagemWebBytes!,
+                          width: double.infinity,
+                          height: double.infinity,
+                          fit: BoxFit.cover,
+                        )
+                      : Image.file( 
+                          _imagemSelecionada!,
+                          width: double.infinity,
+                          height: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.5),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.edit, color: Colors.white, size: 14),
+                  ),
+                ),
+              ],
+            )
+          : Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.camera_alt_outlined,
+                    color: Color(0xFFB4B2A9), size: 32),
+                SizedBox(height: 8),
+                Text('Adicionar foto',
+                    style: TextStyle(color: Color(0xFF888780), fontSize: 13)),
+                SizedBox(height: 2),
+                Text(
+                  'Toque para selecionar',
+                  style: TextStyle(
+                    color: AppTheme.primary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+    ),
+  );
+}
 
   Widget _buildCampo({
     Key? key,
@@ -321,54 +360,54 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
     required String placeholder,
     int maxLines = 1,
     TextInputType teclado = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
   }) {
     return Column(
       key: key,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: Color(0xFF888780),
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        Text(label,
+            style: const TextStyle(
+              color: Color(0xFF888780),
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            )),
         const SizedBox(height: 6),
         TextFormField(
           controller: controller,
           maxLines: maxLines,
           keyboardType: teclado,
+          inputFormatters: inputFormatters,
           validator: validator,
           style: const TextStyle(color: Color(0xFF1A1A2E), fontSize: 14),
           decoration: InputDecoration(
             hintText: placeholder,
-            hintStyle: const TextStyle(color: Color(0xFFB4B2A9), fontSize: 13),
+            hintStyle:
+                const TextStyle(color: Color(0xFFB4B2A9), fontSize: 13),
             filled: true,
             fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 12,
-            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE5E5E0), width: 1),
+              borderSide:
+                  const BorderSide(color: Color(0xFFE5E5E0), width: 1),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: AppTheme.primary, width: 1.5),
+              borderSide:
+                  const BorderSide(color: AppTheme.primary, width: 1.5),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE24B4A), width: 1),
+              borderSide:
+                  const BorderSide(color: Color(0xFFE24B4A), width: 1),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(
-                color: Color(0xFFE24B4A),
-                width: 1.5,
-              ),
+              borderSide:
+                  const BorderSide(color: Color(0xFFE24B4A), width: 1.5),
             ),
           ),
         ),
@@ -376,80 +415,72 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
     );
   }
 
-  // ── Dropdown de categoria ────────────────────────────
   Widget _buildDropdownCategoria() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Categoria',
-          style: TextStyle(
-            color: Color(0xFF888780),
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        const Text('Categoria',
+            style: TextStyle(
+              color: Color(0xFF888780),
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            )),
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
           value: _categoriaSelecionada,
-          hint: const Text(
-            'Selecionar categoria',
-            style: TextStyle(color: Color(0xFFB4B2A9), fontSize: 13),
-          ),
+          hint: const Text('Selecionar categoria',
+              style: TextStyle(color: Color(0xFFB4B2A9), fontSize: 13)),
           style: const TextStyle(color: Color(0xFF1A1A2E), fontSize: 14),
           dropdownColor: Colors.white,
           decoration: InputDecoration(
             filled: true,
             fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 12,
-            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE5E5E0), width: 1),
+              borderSide:
+                  const BorderSide(color: Color(0xFFE5E5E0), width: 1),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: AppTheme.primary, width: 1.5),
+              borderSide:
+                  const BorderSide(color: AppTheme.primary, width: 1.5),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE24B4A), width: 1),
+              borderSide:
+                  const BorderSide(color: Color(0xFFE24B4A), width: 1),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(
-                color: Color(0xFFE24B4A),
-                width: 1.5,
-              ),
+              borderSide:
+                  const BorderSide(color: Color(0xFFE24B4A), width: 1.5),
             ),
           ),
           items: _categorias
-              .map((cat) => DropdownMenuItem(value: cat, child: Text(cat)))
+              .map((cat) =>
+                  DropdownMenuItem(value: cat, child: Text(cat)))
               .toList(),
-          onChanged: (valor) => setState(() {
-            _categoriaSelecionada = valor;
-          }),
-          validator: (v) => v == null ? 'Selecione uma categoria' : null,
+          onChanged: (valor) =>
+              setState(() => _categoriaSelecionada = valor),
+          validator: (v) =>
+              v == null ? 'Selecione uma categoria' : null,
         ),
       ],
     );
   }
 
-  // ── Toggle Com valor / Gratuito ──────────────────────
   Widget _buildTogglePreco() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Preço',
-          style: TextStyle(
-            color: Color(0xFF888780),
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        const Text('Preço',
+            style: TextStyle(
+              color: Color(0xFF888780),
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            )),
         const SizedBox(height: 6),
         Row(
           children: [
@@ -518,28 +549,38 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
     );
   }
 
-  // ── Botão Publicar ───────────────────────────────────
   Widget _buildBotaoPublicar() {
     return SizedBox(
       width: double.infinity,
       height: 52,
       child: ElevatedButton(
-        onPressed: _publicar,
+        onPressed: _salvando ? null : _publicar,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF1A1A2E),
+          disabledBackgroundColor:
+              const Color(0xFF1A1A2E).withOpacity(0.6),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
           elevation: 0,
         ),
-        child: const Text(
-          'Publicar anúncio',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        child: _salvando
+            ? const SizedBox(
+                height: 22,
+                width: 22,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2.5,
+                ),
+              )
+            : const Text(
+                'Publicar anúncio',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
       ),
     );
   }

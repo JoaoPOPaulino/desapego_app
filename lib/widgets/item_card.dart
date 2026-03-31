@@ -1,6 +1,8 @@
+import 'package:desapego/widgets/item_imagem.dart';
 import 'package:flutter/material.dart';
 import '../models/item_model.dart';
 import '../core/theme.dart';
+
 
 class ItemCard extends StatelessWidget {
   final ItemModel item;
@@ -8,29 +10,24 @@ class ItemCard extends StatelessWidget {
 
   const ItemCard({super.key, required this.item, required this.onTap});
 
-  // Retorna a cor de fundo do thumbnail com base na categoria.
-  // Usar um método separado deixa o build() mais limpo e
-  // facilita adicionar novas categorias no futuro.
   Color _corFundoCategoria(String categoria) {
     switch (categoria.toLowerCase()) {
       case 'eletrônicos':
       case 'eletrônico':
-        return const Color(0xFF1D3A30); // verde escuro
+        return const Color(0xFF1D3A30);
       case 'móveis':
-        return const Color(0xFF2A2010); // marrom escuro
+        return const Color(0xFF2A2010);
       case 'roupas':
-        return const Color(0xFF2A2060); // azul/roxo escuro
+        return const Color(0xFF2A2060);
       case 'livros':
-        return const Color(0xFF1A2A3A); // azul escuro
+        return const Color(0xFF1A2A3A);
       case 'esportes':
-        return const Color(0xFF1A3020); // verde mais escuro
+        return const Color(0xFF1A3020);
       default:
-        return const Color(0xFF2C2C2E); // cinza padrão
+        return const Color(0xFF2C2C2E);
     }
   }
 
-  // Retorna o ícone correspondente à categoria.
-  // Melhora a leitura visual — usuário identifica a categoria de relance.
   IconData _iconeCategoria(String categoria) {
     switch (categoria.toLowerCase()) {
       case 'eletrônicos':
@@ -49,22 +46,21 @@ class ItemCard extends StatelessWidget {
     }
   }
 
-  // Retorna a cor do ícone — mais clara que o fundo para dar contraste
   Color _corIconeCategoria(String categoria) {
     switch (categoria.toLowerCase()) {
       case 'eletrônicos':
       case 'eletrônico':
-        return const Color(0xFF5DCAA5); // verde claro
+        return const Color(0xFF5DCAA5);
       case 'móveis':
-        return const Color(0xFFEF9F27); // âmbar
+        return const Color(0xFFEF9F27);
       case 'roupas':
-        return const Color(0xFFAFA9EC); // roxo claro
+        return const Color(0xFFAFA9EC);
       case 'livros':
-        return const Color(0xFF85B7EB); // azul claro
+        return const Color(0xFF85B7EB);
       case 'esportes':
-        return const Color(0xFF97C459); // verde vivo
+        return const Color(0xFF97C459);
       default:
-        return const Color(0xFF888780); // cinza
+        return const Color(0xFF888780);
     }
   }
 
@@ -91,29 +87,33 @@ class ItemCard extends StatelessWidget {
   }
 
   Widget _buildThumbnail() {
+    // Se tem qualquer imagem, usa o ItemImage
+    if (item.imagemBase64 != null ||
+        item.imagemUrl != null ||
+        item.imagemAsset != null) {
+      return ItemImage(
+        item: item,
+        width: 56,
+        height: 56,
+        borderRadius: BorderRadius.circular(10),
+      );
+    }
+
+    // Sem imagem — mostra ícone da categoria
     return Container(
       width: 56,
       height: 56,
       decoration: BoxDecoration(
-        // Usa a cor da categoria em vez de uma cor fixa
         color: _corFundoCategoria(item.categoria),
         borderRadius: BorderRadius.circular(10),
       ),
-      child: item.imagemUrl != null
-          ? ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              // Se tem imagem, mostra ela — requisito obrigatório do trabalho
-              child: Image.network(item.imagemUrl!, fit: BoxFit.cover),
-            )
-          : Center(
-              child: Icon(
-                // Ícone correspondente à categoria
-                _iconeCategoria(item.categoria),
-                // Cor do ícone correspondente à categoria
-                color: _corIconeCategoria(item.categoria),
-                size: 26,
-              ),
-            ),
+      child: Center(
+        child: Icon(
+          _iconeCategoria(item.categoria),
+          color: _corIconeCategoria(item.categoria),
+          size: 26,
+        ),
+      ),
     );
   }
 
@@ -121,7 +121,6 @@ class ItemCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Nome do item
         Text(
           item.nome,
           style: const TextStyle(
@@ -131,20 +130,17 @@ class ItemCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 3),
-        // Descrição resumida — maxLines evita que quebre o layout
         Text(
           item.descricao,
           maxLines: 1,
-          overflow: TextOverflow.ellipsis, // "..." quando o texto é longo
+          overflow: TextOverflow.ellipsis,
           style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11),
         ),
         const SizedBox(height: 6),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Preço ou badge "Grátis"
             item.isGratuito ? _buildTagGratis() : _buildPreco(),
-            // Tag da categoria
             _buildTagCategoria(),
           ],
         ),
@@ -152,7 +148,6 @@ class ItemCard extends StatelessWidget {
     );
   }
 
-  // Badge "Grátis" com fundo roxo claro
   Widget _buildTagGratis() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -171,7 +166,6 @@ class ItemCard extends StatelessWidget {
     );
   }
 
-  // Texto do preço em verde
   Widget _buildPreco() {
     return Text(
       'R\$ ${item.preco!.toStringAsFixed(0)}',
@@ -183,7 +177,6 @@ class ItemCard extends StatelessWidget {
     );
   }
 
-  // Tag da categoria com fundo escuro sutil
   Widget _buildTagCategoria() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),

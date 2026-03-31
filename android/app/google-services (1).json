@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "708792048561",
+    "project_id": "desapego-75120",
+    "storage_bucket": "desapego-75120.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:708792048561:android:68c10ee0b76b12d81d7b90",
+        "android_client_info": {
+          "package_name": "com.exemplo.desapego"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBom9hGNG2qrn98z3JrhuaF-a-YWWOgNzI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

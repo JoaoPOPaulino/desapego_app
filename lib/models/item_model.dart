@@ -7,6 +7,8 @@ class ItemModel {
   final String? nomeContato;
   final String contato;
   final String? imagemUrl;
+  final String? imagemAsset;
+  final String? imagemBase64;
   final bool destaque;
   final DateTime criadoEm;
 
@@ -16,9 +18,11 @@ class ItemModel {
     required this.descricao,
     required this.categoria,
     this.preco,
-    this.nomeContato,         
+    this.nomeContato,
     required this.contato,
     this.imagemUrl,
+    this.imagemAsset,
+    this.imagemBase64,
     this.destaque = false,
     required this.criadoEm,
   });
@@ -35,6 +39,7 @@ class ItemModel {
       'nomeContato': nomeContato,
       'contato': contato,
       'imagemUrl': imagemUrl,
+      'imagemBase64': imagemBase64,
       'destaque': destaque ? 1 : 0,
       'criadoEm': criadoEm.toIso8601String(),
     };
@@ -50,6 +55,7 @@ class ItemModel {
       nomeContato: map['nomeContato'],
       contato: map['contato'],
       imagemUrl: map['imagemUrl'],
+      imagemBase64: map['imagemBase64'],
       destaque: map['destaque'] == 1,
       criadoEm: DateTime.parse(map['criadoEm']),
     );

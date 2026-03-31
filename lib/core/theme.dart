@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Cores principais
   static const Color background = Color(0xFF1A1A2E);
   static const Color surface = Color(0xFF28282B);
   static const Color cardColor = Color(0xFF2C2C2E);
@@ -14,14 +13,17 @@ class AppTheme {
   static const Color border = Color(0xFF3A3A3C);
 
   static ThemeData get theme => ThemeData(
-    scaffoldBackgroundColor: contentBg,
-    primaryColor: primary,
-    fontFamily: 'Inter',
-    appBarTheme: const AppBarTheme(
-      backgroundColor: background,
-      foregroundColor: textPrimary,
-      elevation: 0,
-    ),
-    colorScheme: ColorScheme.dark(primary: primary, surface: Color(0xFF1A1A2E)),
-  );
+        scaffoldBackgroundColor: contentBg,
+        primaryColor: primary,
+        fontFamily: 'Inter',
+        appBarTheme: const AppBarTheme(
+          backgroundColor: background,
+          foregroundColor: textPrimary,
+          elevation: 0,
+        ),
+        colorScheme: const ColorScheme.dark(
+          primary: primary,
+          surface: Color(0xFF1A1A2E),
+        ),
+      );
 }
