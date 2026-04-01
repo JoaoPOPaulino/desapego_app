@@ -6,49 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../core/theme.dart';
 import '../models/item_model.dart';
+import '../data/mock_data.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
-  // Dados mockados locais (enquanto não há itens no Firestore)
-  static final List<ItemModel> _destaquesMock = [
-    ItemModel(
-      id: '1',
-      nome: 'Notebook Dell i5',
-      descricao: 'Funcionando perfeitamente, 8GB RAM',
-      categoria: 'Eletrônicos',
-      preco: 1200,
-      nomeContato: 'João Silva',
-      contato: '(63) 9 9999-0000',
-      imagemAsset: 'assets/images/notebook.png',
-      destaque: true,
-      criadoEm: DateTime.now(),
-    ),
-    ItemModel(
-      id: '2',
-      nome: 'Mesa de escritório',
-      descricao: 'Madeira maciça, 1.20m',
-      categoria: 'Móveis',
-      preco: 180,
-      nomeContato: 'Maria Souza',
-      contato: '(63) 9 8888-0000',
-      imagemAsset: 'assets/images/mesa_escritorio.jpg',
-      destaque: true,
-      criadoEm: DateTime.now(),
-    ),
-    ItemModel(
-      id: '3',
-      nome: 'Camisas masculinas',
-      descricao: '3 camisas tamanho M',
-      categoria: 'Roupas',
-      preco: null,
-      nomeContato: 'Pedro Lima',
-      contato: '(63) 9 7777-0000',
-      imagemAsset: 'assets/images/camisas.png',
-      destaque: true,
-      criadoEm: DateTime.now(),
-    ),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -71,11 +32,12 @@ class HomeScreen extends StatelessWidget {
                 children: [
                   const SizedBox(height: 16),
                   CarouselWidget(
-                    itens: _destaquesMock,
+                    itens: MockData.itens,
                     onItemTap: (item) => Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (_) => DetalheScreen(item: item)),
+                        builder: (_) => DetalheScreen(item: item),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -148,8 +110,7 @@ class HomeScreen extends StatelessWidget {
                 SizedBox(width: 8),
                 Text(
                   'Buscar itens...',
-                  style:
-                      TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
                 ),
               ],
             ),
@@ -206,51 +167,33 @@ class HomeScreen extends StatelessWidget {
             child: Center(
               child: Text(
                 'Erro ao carregar itens.',
-                style: TextStyle(color: Colors.red[300]),
+                style: TextStyle(color: Colors.red),
               ),
             ),
           );
         }
 
-        final itens = snapshot.data ?? [];
+        final itensFirestore = snapshot.data ?? [];
 
-        // Sem dados ainda — mostra mock
-        if (itens.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              children: _destaquesMock
-                  .map((item) => Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: ItemCard(
-                          item: item,
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => DetalheScreen(item: item)),
-                          ),
-                        ),
-                      ))
-                  .toList(),
-            ),
-          );
-        }
+        final todosItens = [...MockData.itens, ...itensFirestore];
 
-        // Dados do Firestore
         return ListView.separated(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemCount: itens.length,
+          itemCount: todosItens.length,
           separatorBuilder: (_, __) => const SizedBox(height: 10),
-          itemBuilder: (context, index) => ItemCard(
-            item: itens[index],
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (_) => DetalheScreen(item: itens[index])),
-            ),
-          ),
+          itemBuilder: (context, index) {
+            final item = todosItens[index];
+
+            return ItemCard(
+              item: item,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => DetalheScreen(item: item)),
+              ),
+            );
+          },
         );
       },
     );

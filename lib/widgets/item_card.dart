@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../models/item_model.dart';
 import '../core/theme.dart';
 
-
 class ItemCard extends StatelessWidget {
   final ItemModel item;
   final VoidCallback onTap;
@@ -181,8 +180,9 @@ class ItemCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-        color: const Color(0xFF3A3A3C),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: const Color(0xFFE0E0E0), width: 1),
       ),
       child: Text(
         item.categoria,

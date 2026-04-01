@@ -1,5 +1,6 @@
 import 'package:desapego/core/theme.dart';
 import 'package:desapego/models/item_model.dart';
+import 'package:desapego/widgets/item_imagem.dart';
 import 'package:flutter/material.dart';
 
 class DetalheScreen extends StatelessWidget {
@@ -23,7 +24,7 @@ class DetalheScreen extends StatelessWidget {
                   _buildDivider(),
                   _buildDescricao(),
                   _buildContato(),
-                  const SizedBox(height: 80),
+                  const SizedBox(height: 100),
                 ],
               ),
             ),
@@ -37,36 +38,18 @@ class DetalheScreen extends StatelessWidget {
   Widget _buildHeroImage(BuildContext context) {
     return Stack(
       children: [
-        Container(
+        // Usa ItemImage — suporta Base64, URL e asset
+        SizedBox(
           width: double.infinity,
           height: 260,
-          color: const Color(0xFFE1F5EE),
-          child: item.imagemUrl != null
-              ? Image.network(
-                  item.imagemUrl!,
-                  fit: BoxFit.cover,
-                  loadingBuilder: (_, child, progress) {
-                    if (progress == null) return child;
-                    return const Center(
-                      child: CircularProgressIndicator(color: AppTheme.primary),
-                    );
-                  },
-                  errorBuilder: (_, __, ___) => const Center(
-                    child: Icon(
-                      Icons.image_not_supported_outlined,
-                      color: Colors.white54,
-                      size: 48,
-                    ),
-                  ),
-                )
-              : const Center(
-                  child: Icon(
-                    Icons.image_outlined,
-                    color: Color(0xFF1D9E75),
-                    size: 64,
-                  ),
-                ),
+          child: ItemImage(
+            item: item,
+            width: double.infinity,
+            height: 260,
+            fit: BoxFit.cover,
+          ),
         ),
+        // Botão voltar
         SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(12),
@@ -88,7 +71,7 @@ class DetalheScreen extends StatelessWidget {
             ),
           ),
         ),
-
+        // Indicador de fotos
         Positioned(
           bottom: 12,
           right: 16,
@@ -226,7 +209,7 @@ class DetalheScreen extends StatelessWidget {
     final partes = nome.split(' ');
     final iniciais = partes.length >= 2
         ? '${partes[0][0]}${partes[1][0]}'.toUpperCase()
-        : nome.substring(0, 2).toUpperCase();
+        : nome.substring(0, nome.length >= 2 ? 2 : 1).toUpperCase();
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),

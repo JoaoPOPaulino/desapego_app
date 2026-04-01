@@ -1,5 +1,6 @@
 import 'package:desapego/core/theme.dart';
 import 'package:desapego/screens/cadastrar_screen.dart';
+import 'package:desapego/screens/explorar_screen.dart';
 import 'package:desapego/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -30,7 +31,7 @@ class _MainScreenState extends State<MainScreen> {
   // Apenas as telas já implementadas
   final List<Widget> _screens = [
     const HomeScreen(),
-    const _EmBreve(label: 'Explorar'),
+    const ExplorarScreen(),
     const _EmBreve(label: 'Meus Anúncios'),
     const _EmBreve(label: 'Perfil'),
   ];
