@@ -50,43 +50,47 @@ class _ExplorarScreenState extends State<ExplorarScreen> {
       ),
     );
 
-    return Scaffold(
-      backgroundColor: AppTheme.contentBg,
-      body: Column(
+    return ColoredBox(
+      color: AppTheme.contentBg,
+      child: Column(
         children: [
           _buildTopBar(context),
           Expanded(
-            child: StreamBuilder<List<ItemModel>>(
-              stream: ItemService.listarTodos(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: AppTheme.primary),
-                  );
-                }
-
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Text(
-                      'Erro ao carregar itens.',
-                      style: TextStyle(color: Colors.red[300]),
-                    ),
-                  );
-                }
-
-                final itensFirestore = snapshot.data ?? [];
-
-                final todos = [...MockData.itens, ...itensFirestore];
-                final filtrados = _filtrar(todos);
-
-                return Column(
-                  children: [
-                    _buildFiltros(),
-                    _buildContador(filtrados.length),
-                    Expanded(child: _buildGrid(context, filtrados)),
-                  ],
-                );
-              },
+            child: Column(
+              children: [
+                _buildFiltros(),
+                Expanded(
+                  child: StreamBuilder<List<ItemModel>>(
+                    stream: ItemService.listarTodos(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: CircularProgressIndicator(
+                            color: AppTheme.primary,
+                          ),
+                        );
+                      }
+                      if (snapshot.hasError) {
+                        return Center(
+                          child: Text(
+                            'Erro ao carregar itens.',
+                            style: TextStyle(color: Colors.red[300]),
+                          ),
+                        );
+                      }
+                      final itensFirestore = snapshot.data ?? [];
+                      final todos = [...MockData.itens, ...itensFirestore];
+                      final filtrados = _filtrar(todos);
+                      return Column(
+                        children: [
+                          _buildContador(filtrados.length),
+                          Expanded(child: _buildGrid(context, filtrados)),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -163,45 +167,46 @@ class _ExplorarScreenState extends State<ExplorarScreen> {
   }
 
   Widget _buildFiltros() {
-    return SizedBox(
-      height: 48,
-      width: double.infinity,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        shrinkWrap: true,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        itemCount: _categorias.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final cat = _categorias[index];
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: _categorias.map((cat) {
           final selecionado = cat == _categoriaSelecionada;
-
-          return GestureDetector(
-            onTap: () => setState(() => _categoriaSelecionada = cat),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              decoration: BoxDecoration(
-                color: selecionado ? AppTheme.primary : Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: selecionado
-                      ? AppTheme.primary
-                      : const Color(0xFFD0CFC8),
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: GestureDetector(
+              onTap: () => setState(() => _categoriaSelecionada = cat),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
                 ),
-              ),
-              child: Text(
-                cat,
-                style: TextStyle(
-                  color: selecionado ? Colors.white : const Color(0xFF888780),
-                  fontSize: 13,
-                  fontWeight: selecionado ? FontWeight.w600 : FontWeight.normal,
+                decoration: BoxDecoration(
+                  color: selecionado ? AppTheme.primary : Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: selecionado
+                        ? AppTheme.primary
+                        : const Color(0xFFD0CFC8),
+                  ),
+                ),
+                child: Text(
+                  cat,
+                  style: TextStyle(
+                    color: selecionado ? Colors.white : const Color(0xFF888780),
+                    fontSize: 13,
+                    fontWeight: selecionado
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
                 ),
               ),
             ),
           );
-        },
+        }).toList(),
       ),
     );
   }
@@ -252,7 +257,7 @@ class _ExplorarScreenState extends State<ExplorarScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: 0.78,
+        mainAxisExtent: 220, // altura total do card: 120 imagem + 100 info
       ),
       itemCount: itens.length,
       itemBuilder: (context, index) => _buildGridCard(context, itens[index]),
@@ -282,20 +287,20 @@ class _ExplorarScreenState extends State<ExplorarScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // IMAGEM + CATEGORIA
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(14),
-                  ),
-                  child: ItemImage(
-                    item: item,
-                    width: double.infinity,
-                    height: 120,
-                    fit: BoxFit.cover,
-                  ),
+            SizedBox(
+              height: 120,
+              width: double.infinity,
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(14),
                 ),
-              ],
+                child: ItemImage(
+                  item: item,
+                  width: double.infinity,
+                  height: 120,
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
 
             //INFORMAÇÕES
