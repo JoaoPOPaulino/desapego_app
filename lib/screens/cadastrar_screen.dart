@@ -33,7 +33,7 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
   bool _isGratuito = false;
   bool _salvando = false;
   File? _imagemSelecionada;
-  Uint8List? _imagemWebBytes; 
+  Uint8List? _imagemWebBytes;
 
   final List<String> _categorias = [
     'Eletrônicos',
@@ -55,67 +55,69 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
   }
 
   Future<void> _selecionarImagem() async {
-  final picker = ImagePicker();
-  final image = await picker.pickImage(
-    source: ImageSource.gallery,
-    maxWidth: 800,
-    maxHeight: 800,
-    imageQuality: 85,
-  );
-  if (image != null) {
-    if (kIsWeb) {
-      final bytes = await image.readAsBytes();
-      setState(() => _imagemWebBytes = bytes);
-    } else {
-      setState(() => _imagemSelecionada = File(image.path));
+    final picker = ImagePicker();
+    final image = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 800,
+      maxHeight: 800,
+      imageQuality: 85,
+    );
+    if (image != null) {
+      if (kIsWeb) {
+        final bytes = await image.readAsBytes();
+        setState(() => _imagemWebBytes = bytes);
+      } else {
+        setState(() => _imagemSelecionada = File(image.path));
+      }
     }
   }
-}
 
   void _publicar() async {
-  if (!_formKey.currentState!.validate()) return;
-  setState(() => _salvando = true);
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _salvando = true);
 
-  try {
-    final novoItem = ItemModel(
-      nome: _nomeController.text.trim(),
-      descricao: _descricaoController.text.trim(),
-      categoria: _categoriaSelecionada!,
-      preco: _isGratuito
-          ? null
-          : double.tryParse(_valorController.text.replaceAll(',', '.')),
-      nomeContato: _nomeContatoController.text.trim(),
-      contato: _contatoController.text.trim(),
-      criadoEm: DateTime.now(),
-    );
+    try {
+      final novoItem = ItemModel(
+        nome: _nomeController.text.trim(),
+        descricao: _descricaoController.text.trim(),
+        categoria: _categoriaSelecionada!,
+        preco: _isGratuito
+            ? null
+            : double.tryParse(_valorController.text.replaceAll(',', '.')),
+        nomeContato: _nomeContatoController.text.trim(),
+        contato: _contatoController.text.trim(),
+        criadoEm: DateTime.now(),
+      );
 
-    await ItemService.salvar(
-      novoItem,
-      imagem: kIsWeb ? null : _imagemSelecionada,
-      imagemBytes: kIsWeb ? _imagemWebBytes : null,
-    );
+      await ItemService.salvar(
+        novoItem,
+        imagem: kIsWeb ? null : _imagemSelecionada,
+        imagemBytes: kIsWeb ? _imagemWebBytes : null,
+      );
 
-    if (!mounted) return;
-    await ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(
-          content: Text('Anúncio publicado com sucesso!'),
-          backgroundColor: Color(0xFF1D9E75),
-          duration: Duration(seconds: 2),
-        ))
-        .closed;
-    if (mounted) Navigator.pop(context);
-  } catch (e) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Erro: ${e.toString()}'),
-        backgroundColor: Colors.red,
-      ),
-    );
-  } finally {
-    if (mounted) setState(() => _salvando = false);
+      if (!mounted) return;
+      await ScaffoldMessenger.of(context)
+          .showSnackBar(
+            const SnackBar(
+              content: Text('Anúncio publicado com sucesso!'),
+              backgroundColor: Color(0xFF1D9E75),
+              duration: Duration(seconds: 2),
+            ),
+          )
+          .closed;
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _salvando = false);
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -189,7 +191,8 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
                               teclado: TextInputType.number,
                               inputFormatters: [
                                 FilteringTextInputFormatter.allow(
-                                    RegExp(r'[0-9,.]')),
+                                  RegExp(r'[0-9,.]'),
+                                ),
                               ],
                               validator: (v) {
                                 if (_isGratuito) return null;
@@ -197,7 +200,8 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
                                   return 'Informe o valor';
                                 }
                                 final val = double.tryParse(
-                                    v.replaceAll(',', '.'));
+                                  v.replaceAll(',', '.'),
+                                );
                                 if (val == null || val <= 0) {
                                   return 'Valor inválido';
                                 }
@@ -280,78 +284,87 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
   }
 
   Widget _buildAreaFoto() {
-  final temImagem = kIsWeb
-      ? _imagemWebBytes != null
-      : _imagemSelecionada != null;
+    final temImagem = kIsWeb
+        ? _imagemWebBytes != null
+        : _imagemSelecionada != null;
 
-  return GestureDetector(
-    onTap: _selecionarImagem,
-    child: Container(
-      width: double.infinity,
-      height: 120,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: temImagem ? AppTheme.primary : const Color(0xFFB4B2A9),
-          width: 1.5,
+    return GestureDetector(
+      onTap: _selecionarImagem,
+      child: Container(
+        width: double.infinity,
+        height: 120,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: temImagem ? AppTheme.primary : const Color(0xFFB4B2A9),
+            width: 1.5,
+          ),
         ),
-      ),
-      child: temImagem
-          ? Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: kIsWeb
-                      ? Image.memory(
-                          _imagemWebBytes!,
-                          width: double.infinity,
-                          height: double.infinity,
-                          fit: BoxFit.cover,
-                        )
-                      : Image.file( 
-                          _imagemSelecionada!,
-                          width: double.infinity,
-                          height: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
-                ),
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.5),
-                      shape: BoxShape.circle,
+        child: temImagem
+            ? Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: kIsWeb
+                        ? Image.memory(
+                            _imagemWebBytes!,
+                            width: double.infinity,
+                            height: double.infinity,
+                            fit: BoxFit.cover,
+                          )
+                        : Image.file(
+                            _imagemSelecionada!,
+                            width: double.infinity,
+                            height: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                  ),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.5),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.edit,
+                        color: Colors.white,
+                        size: 14,
+                      ),
                     ),
-                    child: const Icon(Icons.edit, color: Colors.white, size: 14),
                   ),
-                ),
-              ],
-            )
-          : Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Icon(Icons.camera_alt_outlined,
-                    color: Color(0xFFB4B2A9), size: 32),
-                SizedBox(height: 8),
-                Text('Adicionar foto',
-                    style: TextStyle(color: Color(0xFF888780), fontSize: 13)),
-                SizedBox(height: 2),
-                Text(
-                  'Toque para selecionar',
-                  style: TextStyle(
-                    color: AppTheme.primary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
+                ],
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(
+                    Icons.camera_alt_outlined,
+                    color: Color(0xFFB4B2A9),
+                    size: 32,
                   ),
-                ),
-              ],
-            ),
-    ),
-  );
-}
+                  SizedBox(height: 8),
+                  Text(
+                    'Adicionar foto',
+                    style: TextStyle(color: Color(0xFF888780), fontSize: 13),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Toque para selecionar',
+                    style: TextStyle(
+                      color: AppTheme.primary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
 
   Widget _buildCampo({
     Key? key,
@@ -367,12 +380,14 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
       key: key,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: const TextStyle(
-              color: Color(0xFF888780),
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            )),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFF888780),
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         const SizedBox(height: 6),
         TextFormField(
           controller: controller,
@@ -383,31 +398,31 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
           style: const TextStyle(color: Color(0xFF1A1A2E), fontSize: 14),
           decoration: InputDecoration(
             hintText: placeholder,
-            hintStyle:
-                const TextStyle(color: Color(0xFFB4B2A9), fontSize: 13),
+            hintStyle: const TextStyle(color: Color(0xFFB4B2A9), fontSize: 13),
             filled: true,
             fillColor: Colors.white,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide:
-                  const BorderSide(color: Color(0xFFE5E5E0), width: 1),
+              borderSide: const BorderSide(color: Color(0xFFE5E5E0), width: 1),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide:
-                  const BorderSide(color: AppTheme.primary, width: 1.5),
+              borderSide: const BorderSide(color: AppTheme.primary, width: 1.5),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide:
-                  const BorderSide(color: Color(0xFFE24B4A), width: 1),
+              borderSide: const BorderSide(color: Color(0xFFE24B4A), width: 1),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide:
-                  const BorderSide(color: Color(0xFFE24B4A), width: 1.5),
+              borderSide: const BorderSide(
+                color: Color(0xFFE24B4A),
+                width: 1.5,
+              ),
             ),
           ),
         ),
@@ -416,58 +431,122 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
   }
 
   Widget _buildDropdownCategoria() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Categoria',
-            style: TextStyle(
-              color: Color(0xFF888780),
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            )),
-        const SizedBox(height: 6),
-        DropdownButtonFormField<String>(
-          value: _categoriaSelecionada,
-          hint: const Text('Selecionar categoria',
-              style: TextStyle(color: Color(0xFFB4B2A9), fontSize: 13)),
-          style: const TextStyle(color: Color(0xFF1A1A2E), fontSize: 14),
-          dropdownColor: Colors.white,
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide:
-                  const BorderSide(color: Color(0xFFE5E5E0), width: 1),
+    // Mapeamento de ícone e cor por categoria
+    const categoriaInfo = {
+      'Eletrônicos': (
+        Icons.devices_outlined,
+        Color(0xFF5DCAA5),
+        Color(0xFF1D3A30),
+      ),
+      'Móveis': (Icons.chair_outlined, Color(0xFFEF9F27), Color(0xFF2A2010)),
+      'Roupas': (
+        Icons.checkroom_outlined,
+        Color(0xFFAFA9EC),
+        Color(0xFF2A2060),
+      ),
+      'Livros': (
+        Icons.menu_book_outlined,
+        Color(0xFF85B7EB),
+        Color(0xFF1A2A3A),
+      ),
+      'Esportes': (Icons.sports_outlined, Color(0xFF97C459), Color(0xFF1A3020)),
+      'Outros': (
+        Icons.inventory_2_outlined,
+        Color(0xFF888780),
+        Color(0xFF2C2C2E),
+      ),
+    };
+
+    return FormField<String>(
+      initialValue: _categoriaSelecionada,
+      validator: (v) => v == null ? 'Selecione uma categoria' : null,
+      builder: (field) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Categoria',
+              style: TextStyle(
+                color: Color(0xFF888780),
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide:
-                  const BorderSide(color: AppTheme.primary, width: 1.5),
+            const SizedBox(height: 8),
+            GridView.count(
+              crossAxisCount: 3,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+              childAspectRatio: 1.1,
+              children: _categorias.map((cat) {
+                final info = categoriaInfo[cat]!;
+                final selecionado = _categoriaSelecionada == cat;
+
+                return GestureDetector(
+                  onTap: () {
+                    setState(() => _categoriaSelecionada = cat);
+                    field.didChange(cat);
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    decoration: BoxDecoration(
+                      color: selecionado ? info.$3 : Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: selecionado ? info.$2 : const Color(0xFFE5E5E0),
+                        width: selecionado ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: info.$2.withOpacity(
+                              selecionado ? 0.2 : 0.12,
+                            ),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(info.$1, color: info.$2, size: 18),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          cat,
+                          style: TextStyle(
+                            color: selecionado
+                                ? Colors.white
+                                : const Color(0xFF5F5E5A),
+                            fontSize: 11,
+                            fontWeight: selecionado
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide:
-                  const BorderSide(color: Color(0xFFE24B4A), width: 1),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide:
-                  const BorderSide(color: Color(0xFFE24B4A), width: 1.5),
-            ),
-          ),
-          items: _categorias
-              .map((cat) =>
-                  DropdownMenuItem(value: cat, child: Text(cat)))
-              .toList(),
-          onChanged: (valor) =>
-              setState(() => _categoriaSelecionada = valor),
-          validator: (v) =>
-              v == null ? 'Selecione uma categoria' : null,
-        ),
-      ],
+            if (field.hasError)
+              Padding(
+                padding: const EdgeInsets.only(top: 6, left: 4),
+                child: Text(
+                  field.errorText!,
+                  style: const TextStyle(
+                    color: Color(0xFFE24B4A),
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 
@@ -475,12 +554,14 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Preço',
-            style: TextStyle(
-              color: Color(0xFF888780),
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            )),
+        const Text(
+          'Preço',
+          style: TextStyle(
+            color: Color(0xFF888780),
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         const SizedBox(height: 6),
         Row(
           children: [
@@ -530,7 +611,7 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
                     ),
                   ),
                   child: Text(
-                    'Gratuito',
+                    'Doação',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: _isGratuito
@@ -557,8 +638,7 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
         onPressed: _salvando ? null : _publicar,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF1A1A2E),
-          disabledBackgroundColor:
-              const Color(0xFF1A1A2E).withOpacity(0.6),
+          disabledBackgroundColor: const Color(0xFF1A1A2E).withOpacity(0.6),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),

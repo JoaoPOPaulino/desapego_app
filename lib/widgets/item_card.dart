@@ -155,7 +155,7 @@ class ItemCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(5),
       ),
       child: const Text(
-        'Grátis',
+        'Doação',
         style: TextStyle(
           color: AppTheme.primary,
           fontSize: 10,

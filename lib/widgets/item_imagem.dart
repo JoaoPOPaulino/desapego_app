@@ -20,52 +20,79 @@ class ItemImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget image;
+    Widget image = _buildImage();
 
+    image = SizedBox(width: width, height: height, child: image);
+
+    if (borderRadius != null){
+      return ClipRRect(borderRadius: borderRadius!, child: image);
+    }
+
+    return image;
+  }
+
+ Widget _buildImage() {
     if (item.imagemBase64 != null) {
       final bytes = base64Decode(item.imagemBase64!);
-      image = Image.memory(
+      return Image.memory(
         bytes,
         width: width,
         height: height,
         fit: fit,
         errorBuilder: (_, __, ___) => _placeholder(),
       );
-    } else if (item.imagemUrl != null) {
-      image = Image.network(
+    }
+
+    if (item.imagemUrl != null) {
+      return Image.network(
         item.imagemUrl!,
         width: width,
         height: height,
         fit: fit,
         loadingBuilder: (_, child, progress) =>
-            progress == null ? child : _placeholder(),
+            progress == null ? child : _loadingPlaceholder(),
         errorBuilder: (_, __, ___) => _placeholder(),
       );
-    } else if (item.imagemAsset != null) {
-      image = Image.asset(
+    }
+
+    if (item.imagemAsset != null) {
+      return Image.asset(
         item.imagemAsset!,
         width: width,
         height: height,
         fit: fit,
         errorBuilder: (_, __, ___) => _placeholder(),
       );
-    } else {
-      return _placeholder();
     }
 
-    if (borderRadius != null) {
-      return ClipRRect(borderRadius: borderRadius!, child: image);
-    }
-    return image;
+    return _placeholder();
+  }
+
+  Widget _loadingPlaceholder() {
+    return Container(
+      width: width,
+      height: height,
+      color: const Color(0xFFF0F0F0),
+      child: const Center(
+        child: SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Color(0xFF534AB7),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _placeholder() {
     return Container(
       width: width,
       height: height,
-      color: const Color(0xFFE1F5EE),
+      color: const Color(0xFFF0EFFC),
       child: const Center(
-        child: Icon(Icons.image_outlined, color: Color(0xFF1D9E75), size: 32),
+        child: Icon(Icons.image_outlined, color: Color(0xFF534AB7), size: 28),
       ),
     );
   }

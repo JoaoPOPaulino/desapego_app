@@ -2,6 +2,7 @@ import 'package:desapego/core/theme.dart';
 import 'package:desapego/screens/cadastrar_screen.dart';
 import 'package:desapego/screens/explorar_screen.dart';
 import 'package:desapego/screens/home_screen.dart';
+import 'package:desapego/screens/perfil_screen.dart';
 import 'package:flutter/material.dart';
 
 class DesapegoApp extends StatelessWidget {
@@ -33,7 +34,7 @@ class _MainScreenState extends State<MainScreen> {
     const HomeScreen(),
     const ExplorarScreen(),
     const _EmBreve(label: 'Meus Anúncios'),
-    const _EmBreve(label: 'Perfil'),
+    const PerfilScreen(),
   ];
 
   void _onTabTapped(int index) {
@@ -54,7 +55,10 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_currentIndex],
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _screens,
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex >= 2 ? _currentIndex + 1 : _currentIndex,
         onTap: _onTabTapped,

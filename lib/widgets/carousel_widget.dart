@@ -83,7 +83,7 @@ class _CarouselWidgetState extends State<CarouselWidget> {
                           const SizedBox(height: 4),
                           Text(
                             item.isGratuito
-                                ? 'Gratuito'
+                                ? 'Doação'
                                 : 'R\$ ${item.preco!.toStringAsFixed(2)}',
                             style: const TextStyle(
                               color: Color(0xFFD4D0FF),

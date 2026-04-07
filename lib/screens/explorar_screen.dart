@@ -167,12 +167,15 @@ class _ExplorarScreenState extends State<ExplorarScreen> {
   }
 
   Widget _buildFiltros() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: _categorias.map((cat) {
+    return Container(
+      height: 46,
+      color: AppTheme.contentBg,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        itemCount: _categorias.length,
+        itemBuilder: (context, index) {
+          final cat = _categorias[index];
           final selecionado = cat == _categoriaSelecionada;
           return Padding(
             padding: const EdgeInsets.only(right: 8),
@@ -182,7 +185,7 @@ class _ExplorarScreenState extends State<ExplorarScreen> {
                 duration: const Duration(milliseconds: 150),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
-                  vertical: 6,
+                  vertical: 4,
                 ),
                 decoration: BoxDecoration(
                   color: selecionado ? AppTheme.primary : Colors.white,
@@ -206,7 +209,7 @@ class _ExplorarScreenState extends State<ExplorarScreen> {
               ),
             ),
           );
-        }).toList(),
+        },
       ),
     );
   }

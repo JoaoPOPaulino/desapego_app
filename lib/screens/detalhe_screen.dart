@@ -38,18 +38,15 @@ class DetalheScreen extends StatelessWidget {
   Widget _buildHeroImage(BuildContext context) {
     return Stack(
       children: [
-        // Usa ItemImage — suporta Base64, URL e asset
-        SizedBox(
-          width: double.infinity,
-          height: 260,
+        AspectRatio(
+          aspectRatio: 4 / 3,
           child: ItemImage(
             item: item,
             width: double.infinity,
-            height: 260,
+            height: double.infinity,
             fit: BoxFit.cover,
           ),
         ),
-        // Botão voltar
         SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(12),
@@ -66,25 +63,6 @@ class DetalheScreen extends StatelessWidget {
                   Icons.arrow_back_ios_new,
                   color: Colors.white,
                   size: 16,
-                ),
-              ),
-            ),
-          ),
-        ),
-        // Indicador de fotos
-        Positioned(
-          bottom: 12,
-          right: 16,
-          child: Row(
-            children: List.generate(
-              3,
-              (i) => Container(
-                width: 7,
-                height: 7,
-                margin: const EdgeInsets.only(left: 5),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: i == 0 ? Colors.white : Colors.white.withOpacity(0.4),
                 ),
               ),
             ),
@@ -116,7 +94,7 @@ class DetalheScreen extends StatelessWidget {
               const SizedBox(width: 12),
               Text(
                 item.isGratuito
-                    ? 'Gratuito'
+                    ? 'Doação'
                     : 'R\$ ${item.preco!.toStringAsFixed(0)}',
                 style: TextStyle(
                   color: item.isGratuito
