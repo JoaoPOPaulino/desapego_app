@@ -29,24 +29,12 @@ class HomeScreen extends StatelessWidget {
         children: [
           _buildTopBar(context),
           Expanded(
-            // StreamBuilder aqui fora — alimenta TANTO o carrossel
-            // quanto a lista com os mesmos dados.
-            // Evita fazer duas requisições ao Firestore.
             child: StreamBuilder<List<ItemModel>>(
               stream: ItemService.listarTodos(),
               builder: (context, snapshot) {
-                // Junta mock + Firestore e ordena por data
                 final itensFirestore = snapshot.data ?? [];
-
-                // Combina os dois e ordena do mais novo para o mais antigo.
-                // O spread operator "..." insere todos os itens da lista.
                 final todosItens = [...MockData.itens, ...itensFirestore]
                   ..sort((a, b) => b.criadoEm.compareTo(a.criadoEm));
-                // ".." é o cascade operator — chama .sort() no próprio
-                // todosItens sem precisar de uma linha separada.
-
-                // Os 3 mais recentes vão para o carrossel.
-                // Se tiver menos de 3, pega quantos tiver.
                 final itensCarrossel = todosItens
                     .take(_totalCarrossel)
                     .toList();
@@ -57,7 +45,6 @@ class HomeScreen extends StatelessWidget {
                     children: [
                       const SizedBox(height: 16),
 
-                      // Carrossel com os itens mais recentes
                       if (itensCarrossel.isNotEmpty)
                         CarouselWidget(
                           itens: itensCarrossel,
@@ -73,7 +60,6 @@ class HomeScreen extends StatelessWidget {
                       _buildRecentesHeader(context),
                       const SizedBox(height: 10),
 
-                      // Lista completa abaixo do carrossel
                       _buildLista(context, todosItens, snapshot),
 
                       const SizedBox(height: 16),
