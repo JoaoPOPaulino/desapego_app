@@ -11,6 +11,9 @@ import '../data/mock_data.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
+  // Quantos itens aparecem no carrossel
+  static const int _totalCarrossel = 3;
+
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(
@@ -26,27 +29,58 @@ class HomeScreen extends StatelessWidget {
         children: [
           _buildTopBar(context),
           Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 16),
-                  CarouselWidget(
-                    itens: MockData.itens,
-                    onItemTap: (item) => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => DetalheScreen(item: item),
-                      ),
-                    ),
+            // StreamBuilder aqui fora — alimenta TANTO o carrossel
+            // quanto a lista com os mesmos dados.
+            // Evita fazer duas requisições ao Firestore.
+            child: StreamBuilder<List<ItemModel>>(
+              stream: ItemService.listarTodos(),
+              builder: (context, snapshot) {
+                // Junta mock + Firestore e ordena por data
+                final itensFirestore = snapshot.data ?? [];
+
+                // Combina os dois e ordena do mais novo para o mais antigo.
+                // O spread operator "..." insere todos os itens da lista.
+                final todosItens = [...MockData.itens, ...itensFirestore]
+                  ..sort((a, b) => b.criadoEm.compareTo(a.criadoEm));
+                // ".." é o cascade operator — chama .sort() no próprio
+                // todosItens sem precisar de uma linha separada.
+
+                // Os 3 mais recentes vão para o carrossel.
+                // Se tiver menos de 3, pega quantos tiver.
+                final itensCarrossel = todosItens
+                    .take(_totalCarrossel)
+                    .toList();
+
+                return SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 16),
+
+                      // Carrossel com os itens mais recentes
+                      if (itensCarrossel.isNotEmpty)
+                        CarouselWidget(
+                          itens: itensCarrossel,
+                          onItemTap: (item) => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => DetalheScreen(item: item),
+                            ),
+                          ),
+                        ),
+
+                      const SizedBox(height: 20),
+                      _buildRecentesHeader(context),
+                      const SizedBox(height: 10),
+
+                      // Lista completa abaixo do carrossel
+                      _buildLista(context, todosItens, snapshot),
+
+                      const SizedBox(height: 16),
+                    ],
                   ),
-                  const SizedBox(height: 20),
-                  _buildRecentesHeader(context),
-                  const SizedBox(height: 10),
-                  _buildRecentesList(context),
-                  const SizedBox(height: 16),
-                ],
-              ),
+                );
+              },
             ),
           ),
         ],
@@ -68,8 +102,8 @@ class HomeScreen extends StatelessWidget {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Column(
+            children: const [
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
@@ -89,7 +123,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              const Icon(
+              Icon(
                 Icons.keyboard_arrow_down,
                 color: AppTheme.textPrimary,
                 size: 24,
@@ -146,54 +180,61 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRecentesList(BuildContext context) {
-    return StreamBuilder<List<ItemModel>>(
-      stream: ItemService.listarTodos(),
-      builder: (context, snapshot) {
-        // Carregando
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Padding(
-            padding: EdgeInsets.all(32),
-            child: Center(
-              child: CircularProgressIndicator(color: AppTheme.primary),
-            ),
-          );
-        }
+  Widget _buildLista(
+    BuildContext context,
+    List<ItemModel> todosItens,
+    AsyncSnapshot<List<ItemModel>> snapshot,
+  ) {
+    // Enquanto carrega o Firestore pela primeira vez,
+    // mostra o indicador só se não tem nenhum item ainda
+    if (snapshot.connectionState == ConnectionState.waiting &&
+        todosItens.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(32),
+        child: Center(
+          child: CircularProgressIndicator(color: AppTheme.primary),
+        ),
+      );
+    }
 
-        // Erro
-        if (snapshot.hasError) {
-          return Padding(
-            padding: const EdgeInsets.all(32),
-            child: Center(
-              child: Text(
-                'Erro ao carregar itens.',
-                style: TextStyle(color: Colors.red),
-              ),
-            ),
-          );
-        }
+    if (snapshot.hasError) {
+      return Padding(
+        padding: const EdgeInsets.all(32),
+        child: Center(
+          child: Text(
+            'Erro ao carregar itens.',
+            style: TextStyle(color: Colors.red[400]),
+          ),
+        ),
+      );
+    }
 
-        final itensFirestore = snapshot.data ?? [];
+    if (todosItens.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(32),
+        child: Center(
+          child: Text(
+            'Nenhum item cadastrado ainda.',
+            style: TextStyle(color: Color(0xFF888780)),
+          ),
+        ),
+      );
+    }
 
-        final todosItens = [...MockData.itens, ...itensFirestore];
-
-        return ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemCount: todosItens.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 10),
-          itemBuilder: (context, index) {
-            final item = todosItens[index];
-
-            return ItemCard(
-              item: item,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => DetalheScreen(item: item)),
-              ),
-            );
-          },
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemCount: todosItens.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      itemBuilder: (context, index) {
+        final item = todosItens[index];
+        return ItemCard(
+          item: item,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => DetalheScreen(item: item)),
+          ),
         );
       },
     );

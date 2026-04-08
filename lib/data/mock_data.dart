@@ -12,7 +12,7 @@ class MockData {
       contato: '(63) 9 9999-0000',
       imagemAsset: 'assets/images/notebook.png',
       destaque: true,
-      criadoEm: DateTime.now(),
+      criadoEm: DateTime.now().subtract(const Duration(days: 2)),
     ),
     ItemModel(
       id: '2',
@@ -24,7 +24,7 @@ class MockData {
       contato: '(63) 9 8888-0000',
       imagemAsset: 'assets/images/mesa_escritorio.jpg',
       destaque: true,
-      criadoEm: DateTime.now(),
+      criadoEm: DateTime.now().subtract(const Duration(days: 1)),
     ),
     ItemModel(
       id: '3',
@@ -36,7 +36,7 @@ class MockData {
       contato: '(63) 9 7777-0000',
       imagemAsset: 'assets/images/camisas.png',
       destaque: true,
-      criadoEm: DateTime.now(),
+      criadoEm: DateTime.now().subtract(const Duration(hours: 3)),
     ),
   ];
 }
