@@ -3,15 +3,26 @@ import 'package:desapego/services/item_service.dart';
 import 'package:desapego/widgets/carousel_widget.dart';
 import 'package:desapego/widgets/item_card.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import '../core/theme.dart';
 import '../models/item_model.dart';
 import '../data/mock_data.dart';
 
+// Mesmo scroll behavior da ExplorarScreen
+class _AllScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.trackpad,
+        PointerDeviceKind.stylus,
+      };
+}
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  // Quantos itens aparecem no carrossel
   static const int _totalCarrossel = 3;
 
   @override
@@ -23,116 +34,116 @@ class HomeScreen extends StatelessWidget {
       ),
     );
 
-    return Scaffold(
-      backgroundColor: AppTheme.contentBg,
-      body: Column(
-        children: [
-          _buildTopBar(context),
-          Expanded(
-            child: StreamBuilder<List<ItemModel>>(
-              stream: ItemService.listarTodos(),
-              builder: (context, snapshot) {
-                final itensFirestore = snapshot.data ?? [];
-                final todosItens = [...MockData.itens, ...itensFirestore]
-                  ..sort((a, b) => b.criadoEm.compareTo(a.criadoEm));
-                final itensCarrossel = todosItens
-                    .take(_totalCarrossel)
-                    .toList();
+    return ScrollConfiguration(
+      behavior: _AllScrollBehavior(),
+      child: ColoredBox(
+        color: const Color(0xFFF4F3F0),
+        child: Column(
+          children: [
+            _buildHeader(context),
+            Expanded(
+              child: StreamBuilder<List<ItemModel>>(
+                stream: ItemService.listarTodos(),
+                builder: (context, snapshot) {
+                  final itensFirestore = snapshot.data ?? [];
+                  final todosItens = [...MockData.itens, ...itensFirestore]
+                    ..sort((a, b) => b.criadoEm.compareTo(a.criadoEm));
+                  final itensCarrossel =
+                      todosItens.take(_totalCarrossel).toList();
 
-                return SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 16),
+                  return SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 16),
 
-                      if (itensCarrossel.isNotEmpty)
-                        CarouselWidget(
-                          itens: itensCarrossel,
-                          onItemTap: (item) => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => DetalheScreen(item: item),
+                        if (itensCarrossel.isNotEmpty)
+                          CarouselWidget(
+                            itens: itensCarrossel,
+                            onItemTap: (item) => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => DetalheScreen(item: item),
+                              ),
                             ),
                           ),
-                        ),
 
-                      const SizedBox(height: 20),
-                      _buildRecentesHeader(context),
-                      const SizedBox(height: 10),
+                        const SizedBox(height: 20),
+                        _buildRecentesHeader(context),
+                        const SizedBox(height: 10),
 
-                      _buildLista(context, todosItens, snapshot),
+                        _buildLista(context, todosItens, snapshot),
 
-                      const SizedBox(height: 16),
-                    ],
-                  ),
-                );
-              },
+                        const SizedBox(height: 16),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildTopBar(BuildContext context) {
+  // ── Header consistente com ExplorarScreen ──────────────────
+  Widget _buildHeader(BuildContext context) {
     return Container(
       color: AppTheme.background,
       padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 10,
-        left: 16,
-        right: 16,
-        bottom: 12,
+        top: MediaQuery.of(context).padding.top + 14,
+        left: 20,
+        right: 20,
+        bottom: 16,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Desapego+',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Row(
                 children: [
-                  Text(
-                    'Desapego+',
-                    style: TextStyle(
-                      color: AppTheme.textPrimary,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  const Icon(
+                    Icons.location_on_rounded,
+                    color: AppTheme.primary,
+                    size: 12,
                   ),
+                  const SizedBox(width: 3),
                   Text(
                     'Palmas, TO',
                     style: TextStyle(
-                      color: AppTheme.textSecondary,
+                      color: Colors.white.withOpacity(0.55),
                       fontSize: 12,
                     ),
                   ),
                 ],
               ),
-              Icon(
-                Icons.keyboard_arrow_down,
-                color: AppTheme.textPrimary,
-                size: 24,
-              ),
             ],
           ),
-          const SizedBox(height: 12),
+          // Botão de notificação
           Container(
-            height: 40,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(20),
+              color: Colors.white.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: const Row(
-              children: [
-                SizedBox(width: 14),
-                Icon(Icons.search, color: AppTheme.textSecondary, size: 18),
-                SizedBox(width: 8),
-                Text(
-                  'Buscar itens...',
-                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
-                ),
-              ],
+            child: const Icon(
+              Icons.notifications_outlined,
+              color: Colors.white,
+              size: 18,
             ),
           ),
         ],
@@ -142,7 +153,7 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildRecentesHeader(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -151,14 +162,19 @@ class HomeScreen extends StatelessWidget {
             style: TextStyle(
               color: Color(0xFF1A1A2E),
               fontSize: 17,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.3,
             ),
           ),
           GestureDetector(
             onTap: () {},
             child: const Text(
               'Ver todos',
-              style: TextStyle(color: AppTheme.primary, fontSize: 13),
+              style: TextStyle(
+                color: AppTheme.primary,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -171,14 +187,15 @@ class HomeScreen extends StatelessWidget {
     List<ItemModel> todosItens,
     AsyncSnapshot<List<ItemModel>> snapshot,
   ) {
-    // Enquanto carrega o Firestore pela primeira vez,
-    // mostra o indicador só se não tem nenhum item ainda
     if (snapshot.connectionState == ConnectionState.waiting &&
         todosItens.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(32),
         child: Center(
-          child: CircularProgressIndicator(color: AppTheme.primary),
+          child: CircularProgressIndicator(
+            color: AppTheme.primary,
+            strokeWidth: 2.5,
+          ),
         ),
       );
     }
@@ -187,21 +204,53 @@ class HomeScreen extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.all(32),
         child: Center(
-          child: Text(
-            'Erro ao carregar itens.',
-            style: TextStyle(color: Colors.red[400]),
+          child: Column(
+            children: [
+              const Icon(
+                Icons.wifi_off_rounded,
+                size: 40,
+                color: Color(0xFFB4B2A9),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Erro ao carregar itens.',
+                style: TextStyle(color: Colors.red[300], fontSize: 14),
+              ),
+            ],
           ),
         ),
       );
     }
 
     if (todosItens.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(32),
+      return Padding(
+        padding: const EdgeInsets.all(32),
         child: Center(
-          child: Text(
-            'Nenhum item cadastrado ainda.',
-            style: TextStyle(color: Color(0xFF888780)),
+          child: Column(
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8E7E3),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Icon(
+                  Icons.inbox_outlined,
+                  size: 32,
+                  color: Color(0xFFB4B2A9),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Nenhum item cadastrado ainda.',
+                style: TextStyle(
+                  color: Color(0xFF555555),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
       );

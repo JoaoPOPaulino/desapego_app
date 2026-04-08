@@ -98,10 +98,14 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
       if (!mounted) return;
       await ScaffoldMessenger.of(context)
           .showSnackBar(
-            const SnackBar(
-              content: Text('Anúncio publicado com sucesso!'),
-              backgroundColor: Color(0xFF1D9E75),
-              duration: Duration(seconds: 2),
+            SnackBar(
+              content: const Text('Anúncio publicado com sucesso!'),
+              backgroundColor: const Color(0xFF1D9E75),
+              duration: const Duration(seconds: 2),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           )
           .closed;
@@ -112,6 +116,10 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
         SnackBar(
           content: Text('Erro: ${e.toString()}'),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       );
     } finally {
@@ -143,7 +151,9 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildAreaFoto(),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
+                    _buildSecaoLabel('Informações do item'),
+                    const SizedBox(height: 10),
                     _buildCampo(
                       label: 'Nome do item',
                       controller: _nomeController,
@@ -176,7 +186,9 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
                     ),
                     const SizedBox(height: 14),
                     _buildDropdownCategoria(),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 20),
+                    _buildSecaoLabel('Preço'),
+                    const SizedBox(height: 10),
                     _buildTogglePreco(),
                     const SizedBox(height: 14),
                     AnimatedSwitcher(
@@ -209,7 +221,9 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
                               },
                             ),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 20),
+                    _buildSecaoLabel('Contato'),
+                    const SizedBox(height: 10),
                     _buildCampo(
                       label: 'Seu nome',
                       controller: _nomeContatoController,
@@ -229,7 +243,7 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
                           ? 'Informe o contato'
                           : null,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 28),
                     _buildBotaoPublicar(),
                     const SizedBox(height: 16),
                   ],
@@ -242,40 +256,57 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
     );
   }
 
+  // ── Rótulo de seção ────────────────────────────────────────
+  Widget _buildSecaoLabel(String label) {
+    return Text(
+      label.toUpperCase(),
+      style: const TextStyle(
+        color: Color(0xFF888780),
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.8,
+      ),
+    );
+  }
+
+  // ── Header consistente com ExplorarScreen ──────────────────
   Widget _buildTopBar(BuildContext context) {
     return Container(
       color: AppTheme.background,
       padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 10,
-        left: 16,
-        right: 16,
-        bottom: 14,
+        top: MediaQuery.of(context).padding.top + 14,
+        left: 20,
+        right: 20,
+        bottom: 16,
       ),
       child: Row(
         children: [
           GestureDetector(
             onTap: () => Navigator.pop(context),
             child: Container(
-              width: 32,
-              height: 32,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
-                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(
                 Icons.arrow_back_ios_new,
                 color: Colors.white,
-                size: 14,
+                size: 16,
               ),
             ),
           ),
-          const SizedBox(width: 12),
-          const Text(
-            'Novo anúncio',
-            style: TextStyle(
-              color: AppTheme.textPrimary,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
+          const SizedBox(width: 14),
+          const Expanded(
+            child: Text(
+              'Novo anúncio',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.5,
+              ),
             ),
           ),
         ],
@@ -292,20 +323,27 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
       onTap: _selecionarImagem,
       child: Container(
         width: double.infinity,
-        height: 120,
+        height: 140,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: temImagem ? AppTheme.primary : const Color(0xFFB4B2A9),
-            width: 1.5,
+            color: temImagem ? AppTheme.primary : const Color(0xFFE5E5E0),
+            width: temImagem ? 1.5 : 1,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: temImagem
             ? Stack(
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(14),
                     child: kIsWeb
                         ? Image.memory(
                             _imagemWebBytes!,
@@ -321,16 +359,16 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
                           ),
                   ),
                   Positioned(
-                    top: 8,
-                    right: 8,
+                    top: 10,
+                    right: 10,
                     child: Container(
-                      padding: const EdgeInsets.all(6),
+                      padding: const EdgeInsets.all(7),
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.5),
-                        shape: BoxShape.circle,
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(
-                        Icons.edit,
+                        Icons.edit_outlined,
                         color: Colors.white,
                         size: 14,
                       ),
@@ -340,25 +378,33 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
               )
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(
-                    Icons.camera_alt_outlined,
-                    color: Color(0xFFB4B2A9),
-                    size: 32,
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Adicionar foto',
-                    style: TextStyle(color: Color(0xFF888780), fontSize: 13),
-                  ),
-                  SizedBox(height: 2),
-                  Text(
-                    'Toque para selecionar',
-                    style: TextStyle(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEEEDFE),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(
+                      Icons.camera_alt_outlined,
                       color: AppTheme.primary,
-                      fontSize: 11,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Adicionar foto',
+                    style: TextStyle(
+                      color: Color(0xFF1A1A2E),
+                      fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),
+                  ),
+                  const SizedBox(height: 3),
+                  const Text(
+                    'Toque para selecionar da galeria',
+                    style: TextStyle(color: Color(0xFF888780), fontSize: 11),
                   ),
                 ],
               ),
@@ -406,19 +452,19 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
               vertical: 12,
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFFE5E5E0), width: 1),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: AppTheme.primary, width: 1.5),
             ),
             errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFFE24B4A), width: 1),
             ),
             focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(
                 color: Color(0xFFE24B4A),
                 width: 1.5,
@@ -431,7 +477,6 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
   }
 
   Widget _buildDropdownCategoria() {
-    // Mapeamento de ícone e cor por categoria
     const categoriaInfo = {
       'Eletrônicos': (
         Icons.devices_outlined,
@@ -493,11 +538,18 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
                     duration: const Duration(milliseconds: 150),
                     decoration: BoxDecoration(
                       color: selecionado ? info.$3 : Colors.white,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: selecionado ? info.$2 : const Color(0xFFE5E5E0),
                         width: selecionado ? 1.5 : 1,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -551,36 +603,42 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
   }
 
   Widget _buildTogglePreco() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: [
-        const Text(
-          'Preço',
-          style: TextStyle(
-            color: Color(0xFF888780),
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Row(
-          children: [
-            Expanded(
-              child: GestureDetector(
-                onTap: () => setState(() => _isGratuito = false),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: !_isGratuito ? AppTheme.primary : Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: !_isGratuito
-                          ? AppTheme.primary
-                          : const Color(0xFFE5E5E0),
-                    ),
+        Expanded(
+          child: GestureDetector(
+            onTap: () => setState(() => _isGratuito = false),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              padding: const EdgeInsets.symmetric(vertical: 13),
+              decoration: BoxDecoration(
+                color: !_isGratuito ? AppTheme.primary : Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: !_isGratuito
+                      ? AppTheme.primary
+                      : const Color(0xFFE5E5E0),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
                   ),
-                  child: Text(
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.sell_outlined,
+                    size: 15,
+                    color: !_isGratuito
+                        ? Colors.white
+                        : const Color(0xFF888780),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
                     'Com valor',
                     textAlign: TextAlign.center,
                     style: TextStyle(
@@ -591,26 +649,44 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                ),
+                ],
               ),
             ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: GestureDetector(
-                onTap: () => setState(() => _isGratuito = true),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: _isGratuito ? AppTheme.primary : Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: _isGratuito
-                          ? AppTheme.primary
-                          : const Color(0xFFE5E5E0),
-                    ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: GestureDetector(
+            onTap: () => setState(() => _isGratuito = true),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              padding: const EdgeInsets.symmetric(vertical: 13),
+              decoration: BoxDecoration(
+                color: _isGratuito ? AppTheme.primary : Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _isGratuito
+                      ? AppTheme.primary
+                      : const Color(0xFFE5E5E0),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
                   ),
-                  child: Text(
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.volunteer_activism_outlined,
+                    size: 15,
+                    color: _isGratuito ? Colors.white : const Color(0xFF888780),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
                     'Doação',
                     textAlign: TextAlign.center,
                     style: TextStyle(
@@ -621,10 +697,10 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ],
     );
@@ -653,13 +729,24 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
                   strokeWidth: 2.5,
                 ),
               )
-            : const Text(
-                'Publicar anúncio',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
+            : const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.rocket_launch_outlined,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'Publicar anúncio',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
       ),
     );

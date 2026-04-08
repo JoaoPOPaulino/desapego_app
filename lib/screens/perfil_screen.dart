@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 class PerfilScreen extends StatelessWidget {
   const PerfilScreen({super.key});
 
-  // Dados mockados — trocar por autenticação real futuramente
   static const String _nome = 'João Silva';
   static const String _membroDesde = 'março de 2025';
   static const int _anuncios = 5;
@@ -28,9 +27,9 @@ class PerfilScreen extends StatelessWidget {
       ),
     );
 
-    return Scaffold(
-      backgroundColor: AppTheme.contentBg,
-      body: Column(
+    return ColoredBox(
+      color: AppTheme.contentBg,
+      child: Column(
         children: [
           _buildHeader(context),
           Expanded(
@@ -51,18 +50,50 @@ class PerfilScreen extends StatelessWidget {
     );
   }
 
+  // ── Header consistente com ExplorarScreen ──────────────────
   Widget _buildHeader(BuildContext context) {
     return Container(
       width: double.infinity,
       color: AppTheme.background,
       padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 24,
+        top: MediaQuery.of(context).padding.top + 14,
         bottom: 28,
-        left: 16,
-        right: 16,
+        left: 20,
+        right: 20,
       ),
       child: Column(
         children: [
+          // Linha de título com ícone de configurações
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Perfil',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.settings_outlined,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 20),
+
           // Avatar com iniciais
           Container(
             width: 72,
@@ -90,18 +121,30 @@ class PerfilScreen extends StatelessWidget {
           Text(
             _nome,
             style: const TextStyle(
-              color: AppTheme.textPrimary,
+              color: Colors.white,
               fontSize: 20,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.3,
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            'Membro desde $_membroDesde',
-            style: const TextStyle(
-              color: AppTheme.textSecondary,
-              fontSize: 12,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.calendar_today_rounded,
+                color: Colors.white.withOpacity(0.45),
+                size: 11,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'Membro desde $_membroDesde',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.55),
+                  fontSize: 12,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -113,25 +156,33 @@ class PerfilScreen extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.border, width: 1),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          _buildStat('$_anuncios', 'Anúncios'),
+          _buildStat('$_anuncios', 'Anúncios', Icons.campaign_outlined),
           _buildDivisorVertical(),
-          _buildStat('$_vendidos', 'Vendidos'),
+          _buildStat('$_vendidos', 'Vendidos', Icons.sell_outlined),
           _buildDivisorVertical(),
-          _buildStat('$_favoritos', 'Favoritos'),
+          _buildStat('$_favoritos', 'Favoritos', Icons.favorite_outline),
         ],
       ),
     );
   }
 
-  Widget _buildStat(String valor, String label) {
+  Widget _buildStat(String valor, String label, IconData icone) {
     return Expanded(
       child: Column(
         children: [
+          Icon(icone, size: 18, color: AppTheme.primary),
+          const SizedBox(height: 6),
           Text(
             valor,
             style: const TextStyle(
@@ -144,7 +195,7 @@ class PerfilScreen extends StatelessWidget {
           Text(
             label,
             style: const TextStyle(
-              color: AppTheme.textMuted,
+              color: Color(0xFF888780),
               fontSize: 11,
             ),
           ),
@@ -156,7 +207,7 @@ class PerfilScreen extends StatelessWidget {
   Widget _buildDivisorVertical() {
     return Container(
       width: 1,
-      height: 36,
+      height: 48,
       color: const Color(0xFFE5E5E0),
     );
   }
@@ -197,8 +248,14 @@ class PerfilScreen extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.border, width: 1),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         children: List.generate(itens.length, (i) {
@@ -225,12 +282,11 @@ class PerfilScreen extends StatelessWidget {
   Widget _buildMenuItem(_MenuItem item) {
     return InkWell(
       onTap: item.onTap,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(16),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            // Ícone com fundo colorido
             Container(
               width: 36,
               height: 36,
@@ -290,7 +346,6 @@ class PerfilScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Alça
             Container(
               width: 40,
               height: 4,
@@ -385,7 +440,6 @@ class PerfilScreen extends StatelessWidget {
   }
 }
 
-// Modelo interno para os itens do menu
 class _MenuItem {
   final IconData icone;
   final String label;

@@ -47,24 +47,63 @@ class DetalheScreen extends StatelessWidget {
             fit: BoxFit.cover,
           ),
         ),
+        // Gradiente sutil no topo para legibilidade do botão voltar
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 100,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withOpacity(0.35),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+        ),
         SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(12),
-            child: GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.35),
-                  shape: BoxShape.circle,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Botão voltar
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.35),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back_ios_new,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                  ),
                 ),
-                child: const Icon(
-                  Icons.arrow_back_ios_new,
-                  color: Colors.white,
-                  size: 16,
+                // Botão compartilhar
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.35),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.share_outlined,
+                    color: Colors.white,
+                    size: 16,
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ),
@@ -87,21 +126,32 @@ class DetalheScreen extends StatelessWidget {
                   style: const TextStyle(
                     color: Color(0xFF1A1A2E),
                     fontSize: 20,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.3,
                   ),
                 ),
               ),
               const SizedBox(width: 12),
-              Text(
-                item.isGratuito
-                    ? 'Doação'
-                    : 'R\$ ${item.preco!.toStringAsFixed(0)}',
-                style: TextStyle(
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
                   color: item.isGratuito
-                      ? AppTheme.primary
-                      : AppTheme.priceGreen,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
+                      ? const Color(0xFFEEEDFE)
+                      : const Color(0xFFE1F5EE),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  item.isGratuito
+                      ? 'Doação'
+                      : 'R\$ ${item.preco!.toStringAsFixed(0)}',
+                  style: TextStyle(
+                    color: item.isGratuito
+                        ? AppTheme.primary
+                        : AppTheme.priceGreen,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
@@ -205,16 +255,23 @@ class DetalheScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFFEBEBEB),
-              borderRadius: BorderRadius.circular(10),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Row(
               children: [
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 42,
+                  height: 42,
                   decoration: const BoxDecoration(
                     color: Color(0xFFEEEDFE),
                     shape: BoxShape.circle,
@@ -231,26 +288,42 @@ class DetalheScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      nome,
-                      style: const TextStyle(
-                        color: Color(0xFF1A1A2E),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        nome,
+                        style: const TextStyle(
+                          color: Color(0xFF1A1A2E),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      item.contato,
-                      style: const TextStyle(
-                        color: Color(0xFF888780),
-                        fontSize: 12,
+                      const SizedBox(height: 2),
+                      Text(
+                        item.contato,
+                        style: const TextStyle(
+                          color: Color(0xFF888780),
+                          fontSize: 12,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                ),
+                // Ícone WhatsApp decorativo
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE1F5EE),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.chat_bubble_outline_rounded,
+                    color: Color(0xFF1D9E75),
+                    size: 16,
+                  ),
                 ),
               ],
             ),
@@ -269,36 +342,37 @@ class DetalheScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(
-            flex: 1,
-            child: OutlinedButton(
+          // Botão favoritar (ícone)
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEEEDFE),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: IconButton(
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Adicionado aos favoritos!'),
-                    duration: Duration(seconds: 2),
+                  SnackBar(
+                    content: const Text('Adicionado aos favoritos!'),
+                    backgroundColor: AppTheme.primary,
+                    duration: const Duration(seconds: 2),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 );
               },
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppTheme.primary, width: 1.5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-              ),
-              child: const Text(
-                'Favoritar',
-                style: TextStyle(
-                  color: AppTheme.primary,
-                  fontWeight: FontWeight.w600,
-                ),
+              icon: const Icon(
+                Icons.favorite_outline,
+                color: AppTheme.primary,
+                size: 20,
               ),
             ),
           ),
           const SizedBox(width: 10),
           Expanded(
-            flex: 2,
             child: ElevatedButton(
               onPressed: () => _abrirWhatsApp(context),
               style: ElevatedButton.styleFrom(
@@ -307,12 +381,14 @@ class DetalheScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 14),
+                elevation: 0,
               ),
               child: const Text(
                 'Entrar em contato',
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
+                  fontSize: 15,
                 ),
               ),
             ),
@@ -327,6 +403,8 @@ class DetalheScreen extends StatelessWidget {
       SnackBar(
         content: Text('Abrindo contato: ${item.contato}'),
         duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
