@@ -1,15 +1,15 @@
+import 'package:desapego/controllers/item_controller.dart';
 import 'package:desapego/screens/detalhe_screen.dart';
-import 'package:desapego/services/item_service.dart';
 import 'package:desapego/widgets/carousel_widget.dart';
 import 'package:desapego/widgets/item_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
-import '../core/theme.dart';
-import '../models/item_model.dart';
-import '../data/mock_data.dart';
 
-// Mesmo scroll behavior da ExplorarScreen
+import '../core/theme.dart';
+import '../data/mock_data.dart';
+import '../models/item_model.dart';
+
 class _AllScrollBehavior extends MaterialScrollBehavior {
   @override
   Set<PointerDeviceKind> get dragDevices => {
@@ -43,11 +43,19 @@ class HomeScreen extends StatelessWidget {
             _buildHeader(context),
             Expanded(
               child: StreamBuilder<List<ItemModel>>(
-                stream: ItemService.listarTodos(),
+                stream: ItemController.listarTodos(),
                 builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    debugPrint('Erro ao carregar Firestore: ${snapshot.error}');
+                  }
+
                   final itensFirestore = snapshot.data ?? [];
-                  final todosItens = [...MockData.itens, ...itensFirestore]
-                    ..sort((a, b) => b.criadoEm.compareTo(a.criadoEm));
+
+                  final todosItens = [
+                    ...MockData.itens,
+                    ...itensFirestore,
+                  ]..sort((a, b) => b.criadoEm.compareTo(a.criadoEm));
+
                   final itensCarrossel =
                       todosItens.take(_totalCarrossel).toList();
 
@@ -56,7 +64,6 @@ class HomeScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 16),
-
                         if (itensCarrossel.isNotEmpty)
                           CarouselWidget(
                             itens: itensCarrossel,
@@ -67,13 +74,10 @@ class HomeScreen extends StatelessWidget {
                               ),
                             ),
                           ),
-
                         const SizedBox(height: 20),
                         _buildRecentesHeader(context),
                         const SizedBox(height: 10),
-
                         _buildLista(context, todosItens, snapshot),
-
                         const SizedBox(height: 16),
                       ],
                     ),
@@ -87,7 +91,6 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // ── Header consistente com ExplorarScreen ──────────────────
   Widget _buildHeader(BuildContext context) {
     return Container(
       color: AppTheme.background,
@@ -132,7 +135,6 @@ class HomeScreen extends StatelessWidget {
               ),
             ],
           ),
-          // Botão de notificação
           Container(
             width: 38,
             height: 38,
@@ -200,7 +202,7 @@ class HomeScreen extends StatelessWidget {
       );
     }
 
-    if (snapshot.hasError) {
+    if (snapshot.hasError && todosItens.isEmpty) {
       return Padding(
         padding: const EdgeInsets.all(32),
         child: Center(
@@ -264,11 +266,14 @@ class HomeScreen extends StatelessWidget {
       separatorBuilder: (_, __) => const SizedBox(height: 10),
       itemBuilder: (context, index) {
         final item = todosItens[index];
+
         return ItemCard(
           item: item,
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => DetalheScreen(item: item)),
+            MaterialPageRoute(
+              builder: (_) => DetalheScreen(item: item),
+            ),
           ),
         );
       },

@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:desapego/core/theme.dart';
 import 'package:flutter/foundation.dart';
 import 'package:desapego/models/item_model.dart';
-import 'package:desapego/services/item_service.dart';
+import 'package:desapego/controllers/item_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -89,8 +89,15 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
         criadoEm: DateTime.now(),
       );
 
-      await ItemService.salvar(
-        novoItem,
+      await ItemController.publicarItem(
+        nome: _nomeController.text.trim(),
+        descricao: _descricaoController.text.trim(),
+        categoria: _categoriaSelecionada!,
+        preco: _isGratuito
+            ? null
+            : double.tryParse(_valorController.text.replaceAll(',', '.')),
+        nomeContato: _nomeContatoController.text.trim(),
+        contato: _contatoController.text.trim(),
         imagem: kIsWeb ? null : _imagemSelecionada,
         imagemBytes: kIsWeb ? _imagemWebBytes : null,
       );

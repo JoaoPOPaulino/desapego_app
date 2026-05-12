@@ -2,7 +2,7 @@ import 'package:desapego/core/theme.dart';
 import 'package:desapego/data/mock_data.dart';
 import 'package:desapego/models/item_model.dart';
 import 'package:desapego/screens/detalhe_screen.dart';
-import 'package:desapego/services/item_service.dart';
+import 'package:desapego/controllers/item_controller.dart';
 import 'package:desapego/widgets/item_imagem.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
@@ -14,11 +14,11 @@ import 'package:flutter/services.dart';
 class _AllScrollBehavior extends MaterialScrollBehavior {
   @override
   Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.trackpad,
-        PointerDeviceKind.stylus,
-      };
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.trackpad,
+    PointerDeviceKind.stylus,
+  };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -73,14 +73,11 @@ class _ExplorarScreenState extends State<ExplorarScreen>
 
   // ── Filtro ─────────────────────────────────────────────────
   List<ItemModel> _filtrar(List<ItemModel> itens) {
-    return itens.where((item) {
-      final categoriaOk = _categoriaSelecionada == 'Todos' ||
-          item.categoria == _categoriaSelecionada;
-      final buscaOk = _busca.isEmpty ||
-          item.nome.toLowerCase().contains(_busca.toLowerCase()) ||
-          item.descricao.toLowerCase().contains(_busca.toLowerCase());
-      return categoriaOk && buscaOk;
-    }).toList();
+    return ItemController.filtrarItens(
+      itens: itens,
+      categoriaSelecionada: _categoriaSelecionada,
+      busca: _busca,
+    );
   }
 
   void _selecionarCategoria(String cat) {
@@ -113,7 +110,7 @@ class _ExplorarScreenState extends State<ExplorarScreen>
             _buildCategorias(),
             Expanded(
               child: StreamBuilder<List<ItemModel>>(
-                stream: ItemService.listarTodos(),
+                stream: ItemController.listarTodos(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(
@@ -223,9 +220,7 @@ class _ExplorarScreenState extends State<ExplorarScreen>
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.10),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.08),
-              ),
+              border: Border.all(color: Colors.white.withOpacity(0.08)),
             ),
             child: TextField(
               controller: _buscaCtrl,
@@ -281,8 +276,10 @@ class _ExplorarScreenState extends State<ExplorarScreen>
                 physics: const BouncingScrollPhysics(
                   parent: AlwaysScrollableScrollPhysics(),
                 ),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 itemCount: _categorias.length,
                 itemBuilder: (context, index) {
                   final cat = _categorias[index];
@@ -321,14 +318,10 @@ class _ExplorarScreenState extends State<ExplorarScreen>
           curve: Curves.easeInOut,
           width: 70,
           decoration: BoxDecoration(
-            color: sel
-                ? AppTheme.primary
-                : Colors.white.withOpacity(0.07),
+            color: sel ? AppTheme.primary : Colors.white.withOpacity(0.07),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: sel
-                  ? AppTheme.primary
-                  : Colors.white.withOpacity(0.12),
+              color: sel ? AppTheme.primary : Colors.white.withOpacity(0.12),
               width: 1,
             ),
           ),
@@ -340,21 +333,16 @@ class _ExplorarScreenState extends State<ExplorarScreen>
                 child: Icon(
                   cat.icon,
                   size: 20,
-                  color: sel
-                      ? Colors.white
-                      : Colors.white.withOpacity(0.5),
+                  color: sel ? Colors.white : Colors.white.withOpacity(0.5),
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 cat.label,
                 style: TextStyle(
-                  color: sel
-                      ? Colors.white
-                      : Colors.white.withOpacity(0.5),
+                  color: sel ? Colors.white : Colors.white.withOpacity(0.5),
                   fontSize: 10,
-                  fontWeight:
-                      sel ? FontWeight.w600 : FontWeight.normal,
+                  fontWeight: sel ? FontWeight.w600 : FontWeight.normal,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -450,10 +438,7 @@ class _ExplorarScreenState extends State<ExplorarScreen>
             const SizedBox(height: 6),
             Text(
               'Tente outra categoria ou busca',
-              style: TextStyle(
-                color: const Color(0xFF888780),
-                fontSize: 13,
-              ),
+              style: TextStyle(color: const Color(0xFF888780), fontSize: 13),
             ),
           ],
         ),
@@ -517,7 +502,9 @@ class _ExplorarScreenState extends State<ExplorarScreen>
                       left: 8,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: item.isGratuito
                               ? AppTheme.primary
@@ -572,7 +559,9 @@ class _ExplorarScreenState extends State<ExplorarScreen>
                   // Categoria tag
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.primary.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(6),
@@ -603,7 +592,11 @@ class _ExplorarScreenState extends State<ExplorarScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.wifi_off_rounded, size: 40, color: Color(0xFFB4B2A9)),
+          const Icon(
+            Icons.wifi_off_rounded,
+            size: 40,
+            color: Color(0xFFB4B2A9),
+          ),
           const SizedBox(height: 12),
           Text(
             'Erro ao carregar itens',

@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class ItemModel {
   final String? id;
   final String nome;
@@ -40,24 +42,37 @@ class ItemModel {
       'contato': contato,
       'imagemUrl': imagemUrl,
       'imagemBase64': imagemBase64,
-      'destaque': destaque ? 1 : 0,
+      'destaque': destaque,
       'criadoEm': criadoEm.toIso8601String(),
     };
   }
 
   factory ItemModel.fromMap(Map<String, dynamic> map) {
+    final criadoEmValor = map['criadoEm'];
+
+    DateTime dataCriacao;
+    if (criadoEmValor is Timestamp) {
+      dataCriacao = criadoEmValor.toDate();
+    } else if (criadoEmValor is String) {
+      dataCriacao = DateTime.parse(criadoEmValor);
+    } else {
+      dataCriacao = DateTime.now();
+    }
+
     return ItemModel(
       id: map['id'],
-      nome: map['nome'],
-      descricao: map['descricao'],
-      categoria: map['categoria'],
-      preco: map['preco']?.toDouble(),
+      nome: map['nome'] ?? '',
+      descricao: map['descricao'] ?? '',
+      categoria: map['categoria'] ?? 'Outros',
+      preco: map['preco'] == null
+          ? null
+          : (map['preco'] as num).toDouble(),
       nomeContato: map['nomeContato'],
-      contato: map['contato'],
+      contato: map['contato'] ?? '',
       imagemUrl: map['imagemUrl'],
       imagemBase64: map['imagemBase64'],
-      destaque: map['destaque'] == 1,
-      criadoEm: DateTime.parse(map['criadoEm']),
+      destaque: map['destaque'] == true || map['destaque'] == 1,
+      criadoEm: dataCriacao,
     );
   }
 }
