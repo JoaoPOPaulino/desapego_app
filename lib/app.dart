@@ -2,7 +2,9 @@ import 'package:desapego/core/theme.dart';
 import 'package:desapego/screens/cadastrar_screen.dart';
 import 'package:desapego/screens/explorar_screen.dart';
 import 'package:desapego/screens/home_screen.dart';
+import 'package:desapego/screens/login_screen.dart';
 import 'package:desapego/screens/perfil_screen.dart';
+import 'package:desapego/services/auth_service.dart';
 import 'package:flutter/material.dart';
 
 class DesapegoApp extends StatelessWidget {
@@ -14,7 +16,25 @@ class DesapegoApp extends StatelessWidget {
       title: 'Desapego+',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.theme,
-      home: const MainScreen(),
+      home: StreamBuilder(
+        stream: AuthService.authStateChanges,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              backgroundColor: AppTheme.contentBg,
+              body: Center(
+                child: CircularProgressIndicator(color: AppTheme.primary),
+              ),
+            );
+          }
+
+          if (snapshot.hasData) {
+            return const MainScreen();
+          }
+
+          return const LoginScreen();
+        },
+      ),
     );
   }
 }
@@ -29,16 +49,14 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  // Apenas as telas já implementadas
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const ExplorarScreen(),
-    const _EmBreve(label: 'Meus Anúncios'),
-    const PerfilScreen(),
+  final List<Widget> _screens = const [
+    HomeScreen(),
+    ExplorarScreen(),
+    _EmBreve(label: 'Meus Anúncios'),
+    PerfilScreen(),
   ];
 
   void _onTabTapped(int index) {
-    // Índice 2 = botão "+" → abre CadastrarScreen por cima
     if (index == 2) {
       Navigator.push(
         context,
@@ -47,7 +65,6 @@ class _MainScreenState extends State<MainScreen> {
       return;
     }
 
-    // Mapeia os índices reais (pula o 2 que é o "+")
     final screenIndex = index > 2 ? index - 1 : index;
     setState(() => _currentIndex = screenIndex);
   }
@@ -55,10 +72,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex >= 2 ? _currentIndex + 1 : _currentIndex,
         onTap: _onTabTapped,
@@ -93,15 +107,15 @@ class _MainScreenState extends State<MainScreen> {
   }
 }
 
-// Placeholder para telas ainda não implementadas
 class _EmBreve extends StatelessWidget {
   final String label;
+
   const _EmBreve({required this.label});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F3F0),
+      backgroundColor: AppTheme.contentBg,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -109,7 +123,7 @@ class _EmBreve extends StatelessWidget {
             const Icon(
               Icons.construction_outlined,
               size: 48,
-              color: Color(0xFF534AB7),
+              color: AppTheme.primary,
             ),
             const SizedBox(height: 12),
             Text(

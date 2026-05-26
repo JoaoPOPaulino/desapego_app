@@ -1,8 +1,9 @@
 import 'dart:io';
-import 'package:desapego/core/theme.dart';
-import 'package:flutter/foundation.dart';
-import 'package:desapego/models/item_model.dart';
+
 import 'package:desapego/controllers/item_controller.dart';
+import 'package:desapego/core/theme.dart';
+import 'package:desapego/services/auth_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -32,10 +33,11 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
   String? _categoriaSelecionada;
   bool _isGratuito = false;
   bool _salvando = false;
+  bool _carregandoUsuario = true;
   File? _imagemSelecionada;
   Uint8List? _imagemWebBytes;
 
-  final List<String> _categorias = [
+  final List<String> _categorias = const [
     'Eletrônicos',
     'Móveis',
     'Roupas',
@@ -43,6 +45,12 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
     'Esportes',
     'Outros',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarUsuarioLogado();
+  }
 
   @override
   void dispose() {
@@ -54,6 +62,36 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
     super.dispose();
   }
 
+  Future<void> _carregarUsuarioLogado() async {
+    try {
+      final usuario = await AuthService.buscarUsuarioAtual();
+      if (!mounted || usuario == null) return;
+
+      if (_nomeContatoController.text.trim().isEmpty) {
+        _nomeContatoController.text = usuario.nome;
+      }
+      if (_contatoController.text.trim().isEmpty) {
+        _contatoController.text = usuario.telefone;
+      }
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Nao foi possivel carregar seus dados de contato.',
+          ),
+          backgroundColor: const Color(0xFFE24B4A),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _carregandoUsuario = false);
+    }
+  }
+
   Future<void> _selecionarImagem() async {
     final picker = ImagePicker();
     final image = await picker.pickImage(
@@ -62,33 +100,22 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
       maxHeight: 800,
       imageQuality: 85,
     );
-    if (image != null) {
-      if (kIsWeb) {
-        final bytes = await image.readAsBytes();
-        setState(() => _imagemWebBytes = bytes);
-      } else {
-        setState(() => _imagemSelecionada = File(image.path));
-      }
+
+    if (image == null) return;
+
+    if (kIsWeb) {
+      final bytes = await image.readAsBytes();
+      setState(() => _imagemWebBytes = bytes);
+    } else {
+      setState(() => _imagemSelecionada = File(image.path));
     }
   }
 
-  void _publicar() async {
+  Future<void> _publicar() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _salvando = true);
 
     try {
-      final novoItem = ItemModel(
-        nome: _nomeController.text.trim(),
-        descricao: _descricaoController.text.trim(),
-        categoria: _categoriaSelecionada!,
-        preco: _isGratuito
-            ? null
-            : double.tryParse(_valorController.text.replaceAll(',', '.')),
-        nomeContato: _nomeContatoController.text.trim(),
-        contato: _contatoController.text.trim(),
-        criadoEm: DateTime.now(),
-      );
-
       await ItemController.publicarItem(
         nome: _nomeController.text.trim(),
         descricao: _descricaoController.text.trim(),
@@ -106,7 +133,7 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
       await ScaffoldMessenger.of(context)
           .showSnackBar(
             SnackBar(
-              content: const Text('Anúncio publicado com sucesso!'),
+              content: const Text('Anuncio publicado com sucesso!'),
               backgroundColor: const Color(0xFF1D9E75),
               duration: const Duration(seconds: 2),
               behavior: SnackBarBehavior.floating,
@@ -159,34 +186,34 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
                   children: [
                     _buildAreaFoto(),
                     const SizedBox(height: 20),
-                    _buildSecaoLabel('Informações do item'),
+                    _buildSecaoLabel('Informacoes do item'),
                     const SizedBox(height: 10),
                     _buildCampo(
                       label: 'Nome do item',
                       controller: _nomeController,
-                      placeholder: 'Ex: Mesa de escritório',
+                      placeholder: 'Ex: Mesa de escritorio',
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) {
                           return 'Informe o nome do item';
                         }
                         if (v.trim().length < 3) {
-                          return 'Nome muito curto (mín. 3 caracteres)';
+                          return 'Nome muito curto (min. 3 caracteres)';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 14),
                     _buildCampo(
-                      label: 'Descrição',
+                      label: 'Descricao',
                       controller: _descricaoController,
                       placeholder: 'Descreva o estado do item...',
                       maxLines: 3,
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) {
-                          return 'Informe a descrição';
+                          return 'Informe a descricao';
                         }
                         if (v.trim().length < 10) {
-                          return 'Descrição muito curta (mín. 10 caracteres)';
+                          return 'Descricao muito curta (min. 10 caracteres)';
                         }
                         return null;
                       },
@@ -194,7 +221,7 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
                     const SizedBox(height: 14),
                     _buildDropdownCategoria(),
                     const SizedBox(height: 20),
-                    _buildSecaoLabel('Preço'),
+                    _buildSecaoLabel('Preco'),
                     const SizedBox(height: 10),
                     _buildTogglePreco(),
                     const SizedBox(height: 14),
@@ -222,7 +249,7 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
                                   v.replaceAll(',', '.'),
                                 );
                                 if (val == null || val <= 0) {
-                                  return 'Valor inválido';
+                                  return 'Valor invalido';
                                 }
                                 return null;
                               },
@@ -231,10 +258,19 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
                     const SizedBox(height: 20),
                     _buildSecaoLabel('Contato'),
                     const SizedBox(height: 10),
+                    if (_carregandoUsuario)
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: 12),
+                        child: LinearProgressIndicator(
+                          minHeight: 2,
+                          color: AppTheme.primary,
+                          backgroundColor: Color(0xFFE5E5E0),
+                        ),
+                      ),
                     _buildCampo(
                       label: 'Seu nome',
                       controller: _nomeContatoController,
-                      placeholder: 'Ex: João Silva',
+                      placeholder: 'Nome do usuario logado',
                       validator: (v) => v == null || v.trim().isEmpty
                           ? 'Informe seu nome'
                           : null,
@@ -263,7 +299,6 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
     );
   }
 
-  // ── Rótulo de seção ────────────────────────────────────────
   Widget _buildSecaoLabel(String label) {
     return Text(
       label.toUpperCase(),
@@ -276,7 +311,6 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
     );
   }
 
-  // ── Header consistente com ExplorarScreen ──────────────────
   Widget _buildTopBar(BuildContext context) {
     return Container(
       color: AppTheme.background,
@@ -307,7 +341,7 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
           const SizedBox(width: 14),
           const Expanded(
             child: Text(
-              'Novo anúncio',
+              'Novo anuncio',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
@@ -746,7 +780,7 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
                   ),
                   SizedBox(width: 8),
                   Text(
-                    'Publicar anúncio',
+                    'Publicar anuncio',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 15,

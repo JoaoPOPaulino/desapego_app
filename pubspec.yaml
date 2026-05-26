@@ -42,6 +42,8 @@ dependencies:
   firebase_core: ^4.6.0
   cloud_firestore: ^6.2.0
   firebase_storage: ^13.2.0
+  firebase_auth: ^6.1.2
+  http: ^1.2.2
 
   # Seleção de imagem da galeria
   image_picker: ^1.1.2

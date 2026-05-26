@@ -1,22 +1,15 @@
 import 'package:desapego/core/theme.dart';
+import 'package:desapego/models/usuario_model.dart';
+import 'package:desapego/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class PerfilScreen extends StatelessWidget {
   const PerfilScreen({super.key});
 
-  static const String _nome = 'João Silva';
-  static const String _membroDesde = 'março de 2025';
   static const int _anuncios = 5;
   static const int _vendidos = 2;
   static const int _favoritos = 8;
-
-  String get _iniciais {
-    final partes = _nome.split(' ');
-    return partes.length >= 2
-        ? '${partes[0][0]}${partes[1][0]}'.toUpperCase()
-        : _nome.substring(0, 2).toUpperCase();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,31 +20,98 @@ class PerfilScreen extends StatelessWidget {
       ),
     );
 
-    return ColoredBox(
-      color: AppTheme.contentBg,
-      child: Column(
-        children: [
-          _buildHeader(context),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  const SizedBox(height: 8),
-                  _buildEstatisticas(),
-                  const SizedBox(height: 20),
-                  _buildMenu(context),
-                ],
-              ),
+    return StreamBuilder<UsuarioModel?>(
+      stream: AuthService.usuarioAtualStream(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const ColoredBox(
+            color: AppTheme.contentBg,
+            child: Center(
+              child: CircularProgressIndicator(color: AppTheme.primary),
             ),
+          );
+        }
+
+        final usuario = snapshot.data;
+
+        if (usuario == null) {
+          return ColoredBox(
+            color: AppTheme.contentBg,
+            child: Column(
+              children: [
+                _buildSimpleHeader(context),
+                const Expanded(
+                  child: Center(
+                    child: Text(
+                      'Dados do usuario nao encontrados.',
+                      style: TextStyle(color: Color(0xFF888780)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ColoredBox(
+          color: AppTheme.contentBg,
+          child: Column(
+            children: [
+              _buildHeader(context, usuario),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 8),
+                      _buildEstatisticas(),
+                      const SizedBox(height: 20),
+                      _buildSecaoLabel('Dados da conta'),
+                      const SizedBox(height: 10),
+                      _buildDadosConta(usuario),
+                      const SizedBox(height: 20),
+                      _buildSecaoLabel('Menu'),
+                      const SizedBox(height: 10),
+                      _buildMenu(context),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        );
+      },
+    );
+  }
+
+  Widget _buildSimpleHeader(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: AppTheme.background,
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 14,
+        bottom: 16,
+        left: 20,
+        right: 20,
+      ),
+      child: const Text(
+        'Perfil',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.5,
+        ),
       ),
     );
   }
 
-  // ── Header consistente com ExplorarScreen ──────────────────
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, UsuarioModel usuario) {
+    final iniciais = _iniciais(usuario.nome);
+    final cidadeUf = _cidadeUf(usuario);
+    final membroDesde = _membroDesde(usuario.criadoEm);
+
     return Container(
       width: double.infinity,
       color: AppTheme.background,
@@ -63,7 +123,6 @@ class PerfilScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Linha de título com ícone de configurações
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -91,10 +150,7 @@ class PerfilScreen extends StatelessWidget {
               ),
             ],
           ),
-
           const SizedBox(height: 20),
-
-          // Avatar com iniciais
           Container(
             width: 72,
             height: 72,
@@ -108,7 +164,7 @@ class PerfilScreen extends StatelessWidget {
             ),
             child: Center(
               child: Text(
-                _iniciais,
+                iniciais,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 26,
@@ -119,7 +175,7 @@ class PerfilScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            _nome,
+            usuario.nome,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 20,
@@ -128,9 +184,31 @@ class PerfilScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
+          Text(
+            usuario.email,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.55),
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Icon(
+                Icons.location_on_rounded,
+                color: Colors.white.withOpacity(0.45),
+                size: 12,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                cidadeUf,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.55),
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(width: 10),
               Icon(
                 Icons.calendar_today_rounded,
                 color: Colors.white.withOpacity(0.45),
@@ -138,7 +216,7 @@ class PerfilScreen extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               Text(
-                'Membro desde $_membroDesde',
+                membroDesde,
                 style: TextStyle(
                   color: Colors.white.withOpacity(0.55),
                   fontSize: 12,
@@ -147,6 +225,18 @@ class PerfilScreen extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSecaoLabel(String label) {
+    return Text(
+      label.toUpperCase(),
+      style: const TextStyle(
+        color: Color(0xFF888780),
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.8,
       ),
     );
   }
@@ -167,7 +257,7 @@ class PerfilScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          _buildStat('$_anuncios', 'Anúncios', Icons.campaign_outlined),
+          _buildStat('$_anuncios', 'Anuncios', Icons.campaign_outlined),
           _buildDivisorVertical(),
           _buildStat('$_vendidos', 'Vendidos', Icons.sell_outlined),
           _buildDivisorVertical(),
@@ -194,10 +284,7 @@ class PerfilScreen extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(
-              color: Color(0xFF888780),
-              fontSize: 11,
-            ),
+            style: const TextStyle(color: Color(0xFF888780), fontSize: 11),
           ),
         ],
       ),
@@ -205,10 +292,61 @@ class PerfilScreen extends StatelessWidget {
   }
 
   Widget _buildDivisorVertical() {
+    return Container(width: 1, height: 48, color: const Color(0xFFE5E5E0));
+  }
+
+  Widget _buildDadosConta(UsuarioModel usuario) {
+    final endereco = _enderecoCompleto(usuario);
+
     return Container(
-      width: 1,
-      height: 48,
-      color: const Color(0xFFE5E5E0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          _InfoTile(
+            icone: Icons.badge_outlined,
+            label: 'CPF',
+            valor: _formatarCpf(usuario.cpf),
+            cor: AppTheme.primary,
+            corFundo: const Color(0xFFEEEDFE),
+          ),
+          const Divider(
+            height: 1,
+            indent: 56,
+            endIndent: 16,
+            color: Color(0xFFF0EFEF),
+          ),
+          _InfoTile(
+            icone: Icons.phone_outlined,
+            label: 'Telefone',
+            valor: usuario.telefone,
+            cor: const Color(0xFF1D9E75),
+            corFundo: const Color(0xFFE1F5EE),
+          ),
+          const Divider(
+            height: 1,
+            indent: 56,
+            endIndent: 16,
+            color: Color(0xFFF0EFEF),
+          ),
+          _InfoTile(
+            icone: Icons.location_on_outlined,
+            label: 'Endereco',
+            valor: endereco,
+            cor: const Color(0xFFEF9F27),
+            corFundo: const Color(0xFFFFF4E0),
+          ),
+        ],
+      ),
     );
   }
 
@@ -325,7 +463,7 @@ class PerfilScreen extends StatelessWidget {
   void _emBreve(BuildContext context, String label) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('$label — em breve!'),
+        content: Text('$label em breve!'),
         backgroundColor: AppTheme.primary,
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
@@ -358,8 +496,8 @@ class PerfilScreen extends StatelessWidget {
             Container(
               width: 56,
               height: 56,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFDEDED),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFDEDED),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -379,7 +517,7 @@ class PerfilScreen extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             const Text(
-              'Você precisará entrar novamente\npara acessar sua conta.',
+              'Voce precisara entrar novamente\npara acessar sua conta.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Color(0xFF888780),
@@ -395,7 +533,9 @@ class PerfilScreen extends StatelessWidget {
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(
-                          color: Color(0xFFE5E5E0), width: 1.5),
+                        color: Color(0xFFE5E5E0),
+                        width: 1.5,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -413,7 +553,10 @@ class PerfilScreen extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () async {
+                      Navigator.pop(context);
+                      await AuthService.sair();
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFE24B4A),
                       shape: RoundedRectangleBorder(
@@ -435,6 +578,115 @@ class PerfilScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  String _iniciais(String nome) {
+    final partes = nome.trim().split(RegExp(r'\s+'));
+    if (partes.length >= 2) {
+      return '${partes[0][0]}${partes[1][0]}'.toUpperCase();
+    }
+    return nome.isEmpty
+        ? '?'
+        : nome.substring(0, nome.length >= 2 ? 2 : 1).toUpperCase();
+  }
+
+  String _cidadeUf(UsuarioModel usuario) {
+    if (usuario.cidade.isEmpty && usuario.uf.isEmpty) {
+      return 'Local nao informado';
+    }
+    if (usuario.uf.isEmpty) {
+      return usuario.cidade;
+    }
+    if (usuario.cidade.isEmpty) {
+      return usuario.uf;
+    }
+    return '${usuario.cidade}, ${usuario.uf}';
+  }
+
+  String _membroDesde(DateTime? data) {
+    if (data == null) return 'Membro desde hoje';
+    return 'Membro desde ${data.month.toString().padLeft(2, '0')}/${data.year}';
+  }
+
+  String _enderecoCompleto(UsuarioModel usuario) {
+    final partes = [
+      usuario.logradouro,
+      if (usuario.numero.isNotEmpty) 'No ${usuario.numero}',
+      usuario.bairro,
+      _cidadeUf(usuario),
+    ].where((parte) => parte.trim().isNotEmpty).join('\n');
+
+    final cep = usuario.cep.isEmpty ? '' : 'CEP ${usuario.cep}';
+    if (partes.isEmpty) return cep.isEmpty ? 'Endereco nao informado' : cep;
+    return cep.isEmpty ? partes : '$partes\n$cep';
+  }
+
+  String _formatarCpf(String cpf) {
+    final numeros = cpf.replaceAll(RegExp(r'[^0-9]'), '');
+    if (numeros.length != 11) return cpf;
+    return '${numeros.substring(0, 3)}.${numeros.substring(3, 6)}.${numeros.substring(6, 9)}-${numeros.substring(9)}';
+  }
+}
+
+class _InfoTile extends StatelessWidget {
+  final IconData icone;
+  final String label;
+  final String valor;
+  final Color cor;
+  final Color corFundo;
+
+  const _InfoTile({
+    required this.icone,
+    required this.label,
+    required this.valor,
+    required this.cor,
+    required this.corFundo,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: corFundo,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icone, color: cor, size: 18),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: Color(0xFF888780),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  valor,
+                  style: const TextStyle(
+                    color: Color(0xFF1A1A2E),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
