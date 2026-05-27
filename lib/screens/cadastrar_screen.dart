@@ -30,6 +30,8 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
     filter: {'#': RegExp(r'[0-9]')},
   );
 
+  bool _sugerindoIA = false;
+
   String? _categoriaSelecionada;
   String? _qualidadeSelecionada;
   bool _isGratuito = false;
@@ -230,6 +232,8 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
                     const SizedBox(height: 14),
                     _buildQualidadeItem(),
                     const SizedBox(height: 14),
+                    _buildBotaoIA(),
+                    const SizedBox(height: 14),
                     _buildDropdownCategoria(),
                     const SizedBox(height: 20),
                     _buildSecaoLabel('Preco'),
@@ -302,6 +306,44 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBotaoIA() {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: OutlinedButton.icon(
+        onPressed: _sugerindoIA ? null : _sugerirComIA,
+        icon: _sugerindoIA
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppTheme.primary,
+                ),
+              )
+            : const Icon(
+                Icons.auto_awesome_outlined,
+                color: AppTheme.primary,
+                size: 18,
+              ),
+        label: Text(
+          _sugerindoIA ? 'Gerando sugestões...' : 'Sugerir com IA',
+          style: const TextStyle(
+            color: AppTheme.primary,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: AppTheme.primary, width: 1.2),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
       ),
     );
   }
@@ -574,7 +616,8 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
 
     return FormField<String>(
       initialValue: _categoriaSelecionada,
-      validator: (v) => v == null ? 'Selecione uma categoria' : null,
+      validator: (_) =>
+          _categoriaSelecionada == null ? 'Selecione uma categoria' : null,
       builder: (field) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -935,5 +978,71 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
         );
       },
     );
+  }
+
+  Future<void> _sugerirComIA() async {
+    if (_nomeController.text.trim().isEmpty ||
+        _descricaoController.text.trim().isEmpty ||
+        _qualidadeSelecionada == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Informe nome, descrição e qualidade antes de usar a IA.',
+          ),
+          backgroundColor: const Color(0xFFE24B4A),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _sugerindoIA = true);
+
+    try {
+      final sugestao = await ItemController.sugerirDadosComIA(
+        nome: _nomeController.text.trim(),
+        descricao: _descricaoController.text.trim(),
+        qualidade: _qualidadeSelecionada!,
+      );
+
+      setState(() {
+        _categoriaSelecionada = sugestao['categoria'];
+        _descricaoController.text = sugestao['descricao'];
+
+        if (sugestao['preco'] != null) {
+          _isGratuito = false;
+          _valorController.text = sugestao['preco'].toString();
+        }
+      });
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Sugestões da IA aplicadas ao anúncio!'),
+          backgroundColor: AppTheme.priceGreen,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao usar IA: ${e.toString()}'),
+          backgroundColor: const Color(0xFFE24B4A),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _sugerindoIA = false);
+    }
   }
 }

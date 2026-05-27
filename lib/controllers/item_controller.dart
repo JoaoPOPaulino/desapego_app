@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:desapego/services/auth_service.dart';
+import 'package:desapego/services/ia_service.dart';
 
 import '../models/item_model.dart';
 import '../services/item_service.dart';
@@ -72,5 +73,17 @@ class ItemController {
 
   static Stream<List<ItemModel>> listarMeusAnuncios(String uid) {
   return ItemService.listarMeusAnuncios(uid);
+}
+
+static Future<Map<String, dynamic>> sugerirDadosComIA({
+  required String nome,
+  required String descricao,
+  required String qualidade,
+}) {
+  return IaService.sugerirAnuncio(
+    nome: nome,
+    descricao: descricao,
+    qualidade: qualidade,
+  );
 }
 }
