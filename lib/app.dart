@@ -6,6 +6,7 @@ import 'package:desapego/screens/login_screen.dart';
 import 'package:desapego/screens/perfil_screen.dart';
 import 'package:desapego/services/auth_service.dart';
 import 'package:flutter/material.dart';
+import 'package:desapego/screens/meus_anuncios_screen.dart';
 
 class DesapegoApp extends StatelessWidget {
   const DesapegoApp({super.key});
@@ -52,7 +53,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = const [
     HomeScreen(),
     ExplorarScreen(),
-    _EmBreve(label: 'Meus Anúncios'),
+    MeusAnunciosScreen(),
     PerfilScreen(),
   ];
 

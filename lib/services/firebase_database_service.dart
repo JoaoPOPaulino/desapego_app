@@ -44,4 +44,16 @@ class FirebaseDatabaseService {
   Future<void> deletarItem(String id) async {
     await _db.collection(_colecao).doc(id).delete();
   }
+
+  Stream<List<ItemModel>> listarItensDoUsuario(String uid) {
+    return _db
+        .collection(_colecao)
+        .where('uid', isEqualTo: uid)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => ItemModel.fromMap(doc.data()))
+              .toList(),
+        );
+  }
 }

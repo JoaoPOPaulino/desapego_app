@@ -1,4 +1,4 @@
-import 'package:desapego/core/theme.dart';
+﻿import 'package:desapego/core/theme.dart';
 import 'package:desapego/services/auth_service.dart';
 import 'package:desapego/services/cep_service.dart';
 import 'package:flutter/material.dart';
@@ -166,7 +166,7 @@ class _CadastroUsuarioScreenState extends State<CadastroUsuarioScreen> {
                       placeholder: '(63) 9 0000-0000',
                       icon: Icons.phone_outlined,
                       teclado: TextInputType.phone,
-                      validator: _obrigatorio,
+                      validator: _validarTelefone,
                     ),
                     const SizedBox(height: 20),
                     _buildSecaoLabel('Acesso'),
@@ -177,13 +177,7 @@ class _CadastroUsuarioScreenState extends State<CadastroUsuarioScreen> {
                       placeholder: 'seuemail@exemplo.com',
                       icon: Icons.mail_outline,
                       teclado: TextInputType.emailAddress,
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty) {
-                          return 'Informe o e-mail';
-                        }
-                        if (!v.contains('@')) return 'E-mail invalido';
-                        return null;
-                      },
+                      validator: _validarEmail,
                     ),
                     const SizedBox(height: 14),
                     _buildCampo(
@@ -504,4 +498,33 @@ class _CadastroUsuarioScreenState extends State<CadastroUsuarioScreen> {
       ),
     );
   }
+}
+
+String? _validarTelefone(String? value) {
+  if (value == null || value.trim().isEmpty) {
+    return 'Informe o telefone';
+  }
+
+  final telefone = value.replaceAll(RegExp(r'[^0-9]'), '');
+
+  // Brasil: 10 ou 11 dígitos
+  if (telefone.length < 10 || telefone.length > 11) {
+    return 'Telefone inválido';
+  }
+
+  return null;
+}
+
+String? _validarEmail(String? value) {
+  if (value == null || value.trim().isEmpty) {
+    return 'Informe o e-mail';
+  }
+
+  final emailRegex = RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$');
+
+  if (!emailRegex.hasMatch(value.trim())) {
+    return 'E-mail inválido';
+  }
+
+  return null;
 }

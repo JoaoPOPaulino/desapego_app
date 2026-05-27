@@ -5,6 +5,8 @@ import 'package:desapego/widgets/item_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
+import 'package:desapego/models/usuario_model.dart';
+import 'package:desapego/services/auth_service.dart';
 
 import '../core/theme.dart';
 import '../data/mock_data.dart';
@@ -13,11 +15,11 @@ import '../models/item_model.dart';
 class _AllScrollBehavior extends MaterialScrollBehavior {
   @override
   Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.trackpad,
-        PointerDeviceKind.stylus,
-      };
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.trackpad,
+    PointerDeviceKind.stylus,
+  };
 }
 
 class HomeScreen extends StatelessWidget {
@@ -51,13 +53,12 @@ class HomeScreen extends StatelessWidget {
 
                   final itensFirestore = snapshot.data ?? [];
 
-                  final todosItens = [
-                    ...MockData.itens,
-                    ...itensFirestore,
-                  ]..sort((a, b) => b.criadoEm.compareTo(a.criadoEm));
+                  final todosItens = [...MockData.itens, ...itensFirestore]
+                    ..sort((a, b) => b.criadoEm.compareTo(a.criadoEm));
 
-                  final itensCarrossel =
-                      todosItens.take(_totalCarrossel).toList();
+                  final itensCarrossel = todosItens
+                      .take(_totalCarrossel)
+                      .toList();
 
                   return SingleChildScrollView(
                     child: Column(
@@ -124,12 +125,23 @@ class HomeScreen extends StatelessWidget {
                     size: 12,
                   ),
                   const SizedBox(width: 3),
-                  Text(
-                    'Palmas, TO',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.55),
-                      fontSize: 12,
-                    ),
+                  StreamBuilder<UsuarioModel?>(
+                    stream: AuthService.usuarioAtualStream(),
+                    builder: (context, snapshot) {
+                      final usuario = snapshot.data;
+
+                      final localizacao = usuario == null
+                          ? 'Local não informado'
+                          : '${usuario.cidade}, ${usuario.uf}';
+
+                      return Text(
+                        localizacao,
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.55),
+                          fontSize: 12,
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -271,9 +283,7 @@ class HomeScreen extends StatelessWidget {
           item: item,
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => DetalheScreen(item: item),
-            ),
+            MaterialPageRoute(builder: (_) => DetalheScreen(item: item)),
           ),
         );
       },

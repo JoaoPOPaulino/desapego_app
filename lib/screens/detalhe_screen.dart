@@ -58,10 +58,7 @@ class DetalheScreen extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withOpacity(0.35),
-                  Colors.transparent,
-                ],
+                colors: [Colors.black.withOpacity(0.35), Colors.transparent],
               ),
             ),
           ),
@@ -133,8 +130,10 @@ class DetalheScreen extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: item.isGratuito
                       ? const Color(0xFFEEEDFE)
@@ -166,7 +165,7 @@ class DetalheScreen extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               _buildTag(
-                'Bom estado',
+                item.qualidade,
                 bg: const Color(0xFFE1F5EE),
                 text: const Color(0xFF0F6E56),
               ),

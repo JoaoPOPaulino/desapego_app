@@ -31,11 +31,19 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
   );
 
   String? _categoriaSelecionada;
+  String? _qualidadeSelecionada;
   bool _isGratuito = false;
   bool _salvando = false;
   bool _carregandoUsuario = true;
   File? _imagemSelecionada;
   Uint8List? _imagemWebBytes;
+
+  final List<String> _qualidades = const [
+    'Excelente',
+    'Bom',
+    'Sinais de desgaste',
+    'Precisa de reparos',
+  ];
 
   final List<String> _categorias = const [
     'Eletrônicos',
@@ -120,6 +128,7 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
         nome: _nomeController.text.trim(),
         descricao: _descricaoController.text.trim(),
         categoria: _categoriaSelecionada!,
+        qualidade: _qualidadeSelecionada!,
         preco: _isGratuito
             ? null
             : double.tryParse(_valorController.text.replaceAll(',', '.')),
@@ -219,6 +228,8 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
                       },
                     ),
                     const SizedBox(height: 14),
+                    _buildQualidadeItem(),
+                    const SizedBox(height: 14),
                     _buildDropdownCategoria(),
                     const SizedBox(height: 20),
                     _buildSecaoLabel('Preco'),
@@ -271,9 +282,7 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
                       label: 'Seu nome',
                       controller: _nomeContatoController,
                       placeholder: 'Nome do usuario logado',
-                      validator: (v) => v == null || v.trim().isEmpty
-                          ? 'Informe seu nome'
-                          : null,
+                      enabled: false,
                     ),
                     const SizedBox(height: 14),
                     _buildCampo(
@@ -282,9 +291,7 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
                       placeholder: '(63) 9 0000-0000',
                       teclado: TextInputType.phone,
                       inputFormatters: [_telefoneMask],
-                      validator: (v) => v == null || v.trim().isEmpty
-                          ? 'Informe o contato'
-                          : null,
+                      enabled: false,
                     ),
                     const SizedBox(height: 28),
                     _buildBotaoPublicar(),
@@ -462,6 +469,10 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
     TextInputType teclado = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
+
+    // NOVOS PARAMETROS
+    bool enabled = true,
+    bool readOnly = false,
   }) {
     return Column(
       key: key,
@@ -482,28 +493,46 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
           keyboardType: teclado,
           inputFormatters: inputFormatters,
           validator: validator,
+
+          enabled: enabled,
+          readOnly: readOnly,
+
           style: const TextStyle(color: Color(0xFF1A1A2E), fontSize: 14),
+
           decoration: InputDecoration(
             hintText: placeholder,
             hintStyle: const TextStyle(color: Color(0xFFB4B2A9), fontSize: 13),
+
             filled: true,
-            fillColor: Colors.white,
+
+            // deixa visualmente diferente
+            fillColor: enabled ? Colors.white : const Color(0xFFF5F5F5),
+
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 14,
               vertical: 12,
             ),
+
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFFE5E5E0), width: 1),
             ),
+
+            disabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE5E5E0), width: 1),
+            ),
+
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: AppTheme.primary, width: 1.5),
             ),
+
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFFE24B4A), width: 1),
             ),
+
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(
@@ -790,6 +819,121 @@ class _CadastrarScreenState extends State<CadastrarScreen> {
                 ],
               ),
       ),
+    );
+  }
+
+  Widget _buildQualidadeItem() {
+    const qualidadeInfo = {
+      'Excelente': (
+        Icons.auto_awesome_outlined,
+        Color(0xFF1D9E75),
+        Color(0xFFE1F5EE),
+      ),
+      'Bom': (
+        Icons.thumb_up_alt_outlined,
+        Color(0xFF534AB7),
+        Color(0xFFEEEDFE),
+      ),
+      'Sinais de desgaste': (
+        Icons.build_outlined,
+        Color(0xFFEF9F27),
+        Color(0xFFFFF4E0),
+      ),
+      'Precisa de reparos': (
+        Icons.handyman_outlined,
+        Color(0xFFE24B4A),
+        Color(0xFFFDEDED),
+      ),
+    };
+
+    return FormField<String>(
+      initialValue: _qualidadeSelecionada,
+      validator: (v) => v == null ? 'Selecione a qualidade do item' : null,
+      builder: (field) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Qualidade do item',
+              style: TextStyle(
+                color: Color(0xFF888780),
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _qualidades.map((qualidade) {
+                final info = qualidadeInfo[qualidade]!;
+                final selecionado = _qualidadeSelecionada == qualidade;
+
+                return GestureDetector(
+                  onTap: () {
+                    setState(() => _qualidadeSelecionada = qualidade);
+                    field.didChange(qualidade);
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: selecionado ? info.$2 : Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: selecionado ? info.$2 : const Color(0xFFE5E5E0),
+                        width: selecionado ? 1.5 : 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          info.$1,
+                          size: 16,
+                          color: selecionado ? Colors.white : info.$2,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          qualidade,
+                          style: TextStyle(
+                            color: selecionado
+                                ? Colors.white
+                                : const Color(0xFF5F5E5A),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            if (field.hasError)
+              Padding(
+                padding: const EdgeInsets.only(top: 6, left: 4),
+                child: Text(
+                  field.errorText!,
+                  style: const TextStyle(
+                    color: Color(0xFFE24B4A),
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

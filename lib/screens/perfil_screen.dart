@@ -3,13 +3,11 @@ import 'package:desapego/models/usuario_model.dart';
 import 'package:desapego/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class PerfilScreen extends StatelessWidget {
   const PerfilScreen({super.key});
-
-  static const int _anuncios = 5;
-  static const int _vendidos = 2;
-  static const int _favoritos = 8;
 
   @override
   Widget build(BuildContext context) {
@@ -242,28 +240,59 @@ class PerfilScreen extends StatelessWidget {
   }
 
   Widget _buildEstatisticas() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+
+    if (uid == null) {
+      return const SizedBox.shrink();
+    }
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('itens')
+          .where('uid', isEqualTo: uid)
+          .snapshots(),
+      builder: (context, itensSnapshot) {
+        if (!itensSnapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final docs = itensSnapshot.data!.docs;
+
+        final anuncios = docs.length;
+
+        final vendidos = docs.where((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          return (data['status'] ?? '') == 'vendido';
+        }).length;
+
+        final favoritos = docs.where((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          return (data['favoritado'] ?? false) == true;
+        }).length;
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          _buildStat('$_anuncios', 'Anuncios', Icons.campaign_outlined),
-          _buildDivisorVertical(),
-          _buildStat('$_vendidos', 'Vendidos', Icons.sell_outlined),
-          _buildDivisorVertical(),
-          _buildStat('$_favoritos', 'Favoritos', Icons.favorite_outline),
-        ],
-      ),
+          child: Row(
+            children: [
+              _buildStat('$anuncios', 'Anuncios', Icons.campaign_outlined),
+              _buildDivisorVertical(),
+              _buildStat('$vendidos', 'Vendidos', Icons.sell_outlined),
+              _buildDivisorVertical(),
+              _buildStat('$favoritos', 'Favoritos', Icons.favorite_outline),
+            ],
+          ),
+        );
+      },
     );
   }
 

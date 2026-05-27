@@ -1,12 +1,15 @@
 import 'package:desapego/core/theme.dart';
 import 'package:desapego/data/mock_data.dart';
 import 'package:desapego/models/item_model.dart';
+import 'package:desapego/models/usuario_model.dart';
 import 'package:desapego/screens/detalhe_screen.dart';
 import 'package:desapego/controllers/item_controller.dart';
 import 'package:desapego/widgets/item_imagem.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
+
+import '../services/auth_service.dart';
 
 // ─────────────────────────────────────────────────────────────
 //  Scroll behavior que aceita mouse + trackpad + touch (Web)
@@ -184,12 +187,23 @@ class _ExplorarScreenState extends State<ExplorarScreen>
                         size: 12,
                       ),
                       const SizedBox(width: 3),
-                      Text(
-                        'Palmas, TO',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.55),
-                          fontSize: 12,
-                        ),
+                      StreamBuilder<UsuarioModel?>(
+                        stream: AuthService.usuarioAtualStream(),
+                        builder: (context, snapshot) {
+                          final usuario = snapshot.data;
+
+                          final localizacao = usuario == null
+                              ? 'Local nao informado'
+                              : '${usuario.cidade}, ${usuario.uf}';
+
+                          return Text(
+                            localizacao,
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.55),
+                              fontSize: 12,
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),

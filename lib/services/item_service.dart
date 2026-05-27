@@ -54,9 +54,11 @@ class ItemService {
 
     final itemFinal = ItemModel(
       id: id,
+      uid: item.uid,
       nome: item.nome,
       descricao: item.descricao,
       categoria: item.categoria,
+      qualidade: item.qualidade,
       preco: item.preco,
       nomeContato: item.nomeContato,
       contato: item.contato,
@@ -80,5 +82,9 @@ class ItemService {
 
   static Future<void> deletar(String id) {
     return _database.deletarItem(id);
+  }
+
+  static Stream<List<ItemModel>> listarMeusAnuncios(String uid) {
+    return _database.listarItensDoUsuario(uid);
   }
 }
