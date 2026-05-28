@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class IaService {
-  static const String _apiKey = 'AIzaSyBHqg4jM5shDdKYwc-RYKnAtDCbKsK0Hr8';
+  static const String _apiKey = 'AIzaSyBU8ZP9LB3YWiN_7rqIqkKzxPxrwrjOSSg';
 
   static Future<Map<String, dynamic>> sugerirAnuncio({
     required String nome,
@@ -45,7 +45,7 @@ Responda somente em JSON válido, sem markdown:
     );
 
     if (response.statusCode != 200) {
-      throw Exception('Erro ao consultar IA');
+      throw Exception('Erro ${response.statusCode}: ${response.body}');
     }
 
     final data = jsonDecode(response.body);
