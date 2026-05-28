@@ -3,6 +3,7 @@ import 'package:desapego/services/auth_service.dart';
 import 'package:desapego/services/cep_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 class CadastroUsuarioScreen extends StatefulWidget {
   const CadastroUsuarioScreen({super.key});
@@ -25,6 +26,21 @@ class _CadastroUsuarioScreenState extends State<CadastroUsuarioScreen> {
   final _bairroController = TextEditingController();
   final _cidadeController = TextEditingController();
   final _ufController = TextEditingController();
+
+  final _cpfMask = MaskTextInputFormatter(
+    mask: '###.###.###-##',
+    filter: {'#': RegExp(r'[0-9]')},
+  );
+
+  final _telefoneMask = MaskTextInputFormatter(
+    mask: '(##) # ####-####',
+    filter: {'#': RegExp(r'[0-9]')},
+  );
+
+  final _cepMask = MaskTextInputFormatter(
+    mask: '#####-###',
+    filter: {'#': RegExp(r'[0-9]')},
+  );
 
   bool _ocultarSenha = true;
   bool _buscandoCep = false;
@@ -50,7 +66,7 @@ class _CadastroUsuarioScreenState extends State<CadastroUsuarioScreen> {
     final cep = _cepController.text.replaceAll(RegExp(r'[^0-9]'), '');
 
     if (cep.length != 8) {
-      _mostrarMensagem('Informe um CEP com 8 digitos', erro: true);
+      _mostrarMensagem('Informe um CEP com 8 dígitos', erro: true);
       return;
     }
 
@@ -65,7 +81,7 @@ class _CadastroUsuarioScreenState extends State<CadastroUsuarioScreen> {
       _ufController.text = endereco['uf'] ?? '';
 
       if (!mounted) return;
-      _mostrarMensagem('Endereco encontrado!');
+      _mostrarMensagem('Endereço encontrado!');
     } catch (e) {
       if (!mounted) return;
       _mostrarMensagem('Erro ao buscar CEP: ${e.toString()}', erro: true);
@@ -137,7 +153,7 @@ class _CadastroUsuarioScreenState extends State<CadastroUsuarioScreen> {
                     _buildCampo(
                       label: 'Nome completo',
                       controller: _nomeController,
-                      placeholder: 'Ex: Joao Silva',
+                      placeholder: 'Ex: João Silva',
                       icon: Icons.person_outline,
                       validator: _obrigatorio,
                     ),
@@ -148,16 +164,8 @@ class _CadastroUsuarioScreenState extends State<CadastroUsuarioScreen> {
                       placeholder: '000.000.000-00',
                       icon: Icons.badge_outlined,
                       teclado: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
-                        LengthLimitingTextInputFormatter(11),
-                      ],
-                      validator: (v) {
-                        final cpf = v?.replaceAll(RegExp(r'[^0-9]'), '') ?? '';
-                        if (cpf.isEmpty) return 'Informe o CPF';
-                        if (cpf.length != 11) return 'CPF deve ter 11 digitos';
-                        return null;
-                      },
+                      inputFormatters: [_cpfMask],
+                      validator: _validarCpfFormatado,
                     ),
                     const SizedBox(height: 14),
                     _buildCampo(
@@ -166,7 +174,8 @@ class _CadastroUsuarioScreenState extends State<CadastroUsuarioScreen> {
                       placeholder: '(63) 9 0000-0000',
                       icon: Icons.phone_outlined,
                       teclado: TextInputType.phone,
-                      validator: _validarTelefone,
+                      inputFormatters: [_telefoneMask],
+                      validator: _validarTelefoneFormatado,
                     ),
                     const SizedBox(height: 20),
                     _buildSecaoLabel('Acesso'),
@@ -183,7 +192,7 @@ class _CadastroUsuarioScreenState extends State<CadastroUsuarioScreen> {
                     _buildCampo(
                       label: 'Senha',
                       controller: _senhaController,
-                      placeholder: 'Minimo 6 caracteres',
+                      placeholder: 'Mínimo 6 caracteres',
                       icon: Icons.lock_outline,
                       obscureText: _ocultarSenha,
                       suffixIcon: IconButton(
@@ -201,13 +210,13 @@ class _CadastroUsuarioScreenState extends State<CadastroUsuarioScreen> {
                       validator: (v) {
                         if (v == null || v.isEmpty) return 'Informe a senha';
                         if (v.length < 6) {
-                          return 'A senha deve ter no Minimo 6 caracteres';
+                          return 'A senha deve ter no mínimo 6 caracteres';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 20),
-                    _buildSecaoLabel('Endereco'),
+                    _buildSecaoLabel('Endereço'),
                     const SizedBox(height: 10),
                     Row(
                       children: [
@@ -218,19 +227,8 @@ class _CadastroUsuarioScreenState extends State<CadastroUsuarioScreen> {
                             placeholder: '77000-000',
                             icon: Icons.location_on_outlined,
                             teclado: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                RegExp(r'[0-9]'),
-                              ),
-                              LengthLimitingTextInputFormatter(8),
-                            ],
-                            validator: (v) {
-                              if (v == null || v.trim().isEmpty) {
-                                return 'Informe o CEP';
-                              }
-                              if (v.length != 8) return 'CEP invalido';
-                              return null;
-                            },
+                            inputFormatters: [_cepMask],
+                            validator: _validarCepFormatado,
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -275,11 +273,11 @@ class _CadastroUsuarioScreenState extends State<CadastroUsuarioScreen> {
                     ),
                     const SizedBox(height: 14),
                     _buildCampo(
-                      label: 'Numero',
+                      label: 'Número',
                       controller: _numeroController,
                       placeholder: 'Ex: 120',
                       icon: Icons.home_outlined,
-                      teclado: TextInputType.number,
+                      teclado: TextInputType.text,
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(
                           RegExp(r'[0-9A-Za-z]'),
@@ -338,7 +336,7 @@ class _CadastroUsuarioScreenState extends State<CadastroUsuarioScreen> {
   }
 
   String? _obrigatorio(String? v) {
-    if (v == null || v.trim().isEmpty) return 'Campo obrigatorio';
+    if (v == null || v.trim().isEmpty) return 'Campo obrigatório';
     return null;
   }
 
@@ -500,16 +498,46 @@ class _CadastroUsuarioScreenState extends State<CadastroUsuarioScreen> {
   }
 }
 
-String? _validarTelefone(String? value) {
+String? _validarCpfFormatado(String? value) {
+  if (value == null || value.trim().isEmpty) {
+    return 'Informe o CPF';
+  }
+
+  final cpf = value.trim();
+  final cpfRegex = RegExp(r'^\d{3}\.\d{3}\.\d{3}-\d{2}$');
+
+  if (!cpfRegex.hasMatch(cpf)) {
+    return 'CPF deve estar no formato 000.000.000-00';
+  }
+
+  return null;
+}
+
+String? _validarTelefoneFormatado(String? value) {
   if (value == null || value.trim().isEmpty) {
     return 'Informe o telefone';
   }
 
-  final telefone = value.replaceAll(RegExp(r'[^0-9]'), '');
+  final telefone = value.trim();
+  final telefoneRegex = RegExp(r'^\(\d{2}\) \d \d{4}-\d{4}$');
 
-  // Brasil: 10 ou 11 dígitos
-  if (telefone.length < 10 || telefone.length > 11) {
-    return 'Telefone inválido';
+  if (!telefoneRegex.hasMatch(telefone)) {
+    return 'Telefone deve estar no formato (00) 0 0000-0000';
+  }
+
+  return null;
+}
+
+String? _validarCepFormatado(String? value) {
+  if (value == null || value.trim().isEmpty) {
+    return 'Informe o CEP';
+  }
+
+  final cep = value.trim();
+  final cepRegex = RegExp(r'^\d{5}-\d{3}$');
+
+  if (!cepRegex.hasMatch(cep)) {
+    return 'CEP deve estar no formato 00000-000';
   }
 
   return null;

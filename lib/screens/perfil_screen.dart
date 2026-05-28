@@ -1,5 +1,6 @@
 import 'package:desapego/core/theme.dart';
 import 'package:desapego/models/usuario_model.dart';
+import 'package:desapego/screens/login_screen.dart';
 import 'package:desapego/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -508,7 +509,7 @@ class PerfilScreen extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => Padding(
+      builder: (sheetContext) => Padding(
         padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -546,7 +547,7 @@ class PerfilScreen extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             const Text(
-              'Voce precisara entrar novamente\npara acessar sua conta.',
+              'Você precisará entrar novamente\npara acessar sua conta.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Color(0xFF888780),
@@ -559,7 +560,7 @@ class PerfilScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => Navigator.pop(sheetContext),
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(
                         color: Color(0xFFE5E5E0),
@@ -583,8 +584,16 @@ class PerfilScreen extends StatelessWidget {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () async {
-                      Navigator.pop(context);
+                      Navigator.pop(sheetContext);
+
                       await AuthService.sair();
+
+                      if (!context.mounted) return;
+
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        (route) => false,
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFE24B4A),
