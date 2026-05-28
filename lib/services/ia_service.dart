@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class IaService {
-  static const String _apiKey = 'AIzaSyBU8ZP9LB3YWiN_7rqIqkKzxPxrwrjOSSg';
+  static const String _apiKey = '';
 
   static Future<Map<String, dynamic>> sugerirAnuncio({
     required String nome,
